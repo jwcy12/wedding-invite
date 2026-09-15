@@ -1,0 +1,397 @@
+:root {
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #0A0A0A;
+  font-family: 'Noto Serif KR', serif;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.invite {
+  position: relative;
+  max-width: 430px;
+  margin: 0 auto;
+  background: #0A0A0A;
+  color: #F2F2F0;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+/* Desktop / mouse pointer only: box the page like a fixed-size device
+   mockup, centered in the viewport, with its own internal scroll.
+   Touch devices (phones, tablets, foldables) always get the plain
+   full-screen layout above, regardless of viewport width. */
+@media (hover: hover) and (pointer: fine) and (min-width: 431px) {
+  html, body {
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050505;
+  }
+
+  .invite {
+    width: 430px;
+    height: min(932px, 98vh);
+    min-height: 0;
+    flex: none;
+    border: 1px solid #2A2A2A;
+    border-radius: 28px;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, .5);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ---------- snow ---------- */
+.snowfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.snowflake {
+  position: absolute;
+  top: 0;
+  animation-name: omFall, omSway, omFade;
+  animation-timing-function: linear, ease-in-out, ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.snowflake svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes omFall {
+  from { transform: translate3d(0, -24px, 0) rotate(0deg); }
+  to   { transform: translate3d(0, var(--om-fall, 3600px), 0) rotate(220deg); }
+}
+@keyframes omSway {
+  0%, 100% { margin-left: -10px; }
+  50%      { margin-left: 10px; }
+}
+@keyframes omFade {
+  0%, 100% { opacity: .25; }
+  50%      { opacity: .9; }
+}
+
+/* ---------- content ---------- */
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.block { text-align: center; }
+
+/* First screen: hero eyebrow + photo + names, always exactly one
+   viewport tall so it never gets cut off or overflows regardless of
+   device height. 100dvh accounts for mobile browser chrome (address
+   bar) resizing the viewport; 100vh is the fallback for browsers that
+   don't support dvh yet. */
+.intro-section {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+}
+
+.eyebrow {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  letter-spacing: .32em;
+  color: #9A9A94;
+}
+
+.block-hero { padding: 0 30px; }
+
+.block-photo { padding: 0 24px; }
+.lace-photo {
+  display: block;
+  width: 52%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.block-names { padding: 0 30px; }
+.names {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: .01em;
+  color: #FFFFFF;
+}
+.names .amp { font-size: 22px; color: #A8A8A2; }
+.invite-line {
+  margin-top: 34px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: .18em;
+  line-height: 2.1;
+  color: #C9C9C4;
+}
+
+.block-datetime { padding: 110px 30px 0; }
+.date-mono {
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .2em;
+  color: #9A9A94;
+}
+.time {
+  margin-top: 12px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  letter-spacing: .14em;
+  color: #FFFFFF;
+}
+.time .pm { font-size: 22px; }
+.venue {
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: #C9C9C4;
+}
+
+.block-calendar { padding: 0 24px; }
+.cal-card {
+  margin-top: 38px;
+  border: 1px solid #2A2A2A;
+  padding: 26px 18px;
+}
+.cal-title {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  letter-spacing: .28em;
+  color: #9A9A94;
+}
+.cal-weekdays {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 10px;
+  color: #767670;
+  text-align: center;
+}
+.cal-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px 0;
+}
+.cal-cell {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cal-cell span {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  background: transparent;
+  color: #E8E8E6;
+}
+.cal-cell.sun span { color: #8C8C8C; }
+.cal-cell.marked span { background: #FFFFFF; color: #0A0A0A; }
+.cal-cell.empty span { color: transparent; }
+
+.countdown {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+.countdown div {
+  border: 1px solid #2A2A2A;
+  padding: 11px 0;
+}
+.countdown .cd-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  color: #FFFFFF;
+}
+.countdown .cd-key {
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  color: #767670;
+}
+
+.section-title {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  letter-spacing: .28em;
+  color: #9A9A94;
+}
+
+.block-gallery { padding: 44px 24px 0; }
+.gallery-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.gallery-tile {
+  aspect-ratio: 3 / 4;
+  background: repeating-linear-gradient(135deg, #171717 0 5px, #1F1F1F 5px 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 9px;
+  color: #767670;
+}
+
+.block-location { padding: 44px 24px 0; }
+.map-placeholder {
+  margin-top: 16px;
+  aspect-ratio: 4 / 3;
+  background: repeating-linear-gradient(45deg, #171717 0 6px, #1F1F1F 6px 12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 10px;
+  color: #7A7A74;
+}
+.map-buttons {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.map-btn {
+  border: 1px solid #2A2A2A;
+  padding: 11px 0;
+  text-align: center;
+  font-size: 11px;
+  color: #E4E4E0;
+}
+.location-text {
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: #C9C9C4;
+}
+
+.block-accounts { padding: 44px 24px 0; }
+.accounts {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.account-header {
+  width: 100%;
+  border: 1px solid #2A2A2A;
+  padding: 15px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  color: #F2F2F0;
+  background: none;
+  appearance: none;
+  transition: background .15s ease;
+}
+.account-header:hover { background: #161616; }
+.account-header .caret { color: #767670; font-size: 11px; }
+.account-rows {
+  border: 1px solid #2A2A2A;
+  border-top: 0;
+  padding: 4px 16px 12px;
+}
+.account-rows.collapsed { display: none; }
+.account-row {
+  padding: 11px 0;
+  border-bottom: 1px solid #1E1E1E;
+  font-size: 12px;
+  line-height: 1.8;
+  text-align: left;
+}
+.account-row:last-child { border-bottom: 0; }
+.account-row .who { color: #9A9A94; font-size: 11px; }
+.account-row .bank {
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 11px;
+  color: #FFFFFF;
+}
+
+.block-contact { padding: 44px 24px 0; }
+.contact-list {
+  margin-top: 14px;
+  border: 1px solid #2A2A2A;
+}
+.contact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 14px;
+  border-bottom: 1px solid #1E1E1E;
+  font-size: 12px;
+  color: #F2F2F0;
+}
+.contact-row:last-child { border-bottom: 0; }
+.contact-row .who { color: #9A9A94; }
+.contact-actions { display: flex; gap: 6px; }
+.contact-actions span {
+  border: 1px solid #2A2A2A;
+  padding: 5px 10px;
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 10px;
+  color: #E4E4E0;
+}
+
+.block-closing { padding: 46px 0 64px; }
+.closing {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: #9A9A94;
+}
+
+/* Inside the boxed PC frame, "one screen" is the frame's own height,
+   not the raw browser viewport (which is taller than the frame by
+   design). Swap the dvh/vh sizing for a percentage of the frame.
+   Placed after the base .intro-section rule so it wins the cascade. */
+@media (hover: hover) and (pointer: fine) and (min-width: 431px) {
+  .content {
+    height: 100%;
+  }
+
+  .intro-section {
+    height: 100%;
+  }
+}
