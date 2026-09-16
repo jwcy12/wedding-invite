@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+KR:wght@200;300;400;500&family=Pinyon+Script&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<!-- 카카오맵(다음 로드뷰) 퍼가기 로더. 페이지에 지도가 하나뿐이므로 한 번만 로드합니다. -->
+<script charset="UTF-8" class="daum_roughmap_loader_script" src="https://t1.kakaocdn.net/kakaomapweb/roughmap/loader/prod/roughmapLoader.js"></script>
 </head>
 <body>
 
@@ -30,6 +32,8 @@
         <div class="names">Lee chang yong<br><span class="amp">&amp;</span><br>Baek ji won</div>
         <div class="invite-line">TOGETHER WITH OUR FAMILIES,<br>WE INVITE YOU TO JOIN US.</div>
       </section>
+
+      <div class="snow-pile" id="snowPile" aria-hidden="true"></div>
     </div>
 
     <section class="block block-datetime">
@@ -56,11 +60,27 @@
 
     <section class="block block-location">
       <div class="section-title">LOCATION</div>
-      <div class="map-placeholder">map embed</div>
+      <div class="map-embed" id="mapEmbed">
+        <div class="map-embed-inner" id="mapEmbedInner">
+          <div id="daumRoughmapContainer1789568298875" class="root_daum_roughmap root_daum_roughmap_landing"></div>
+        </div>
+      </div>
+      <script charset="UTF-8">
+        new daum.roughmap.Lander({
+          "timestamp" : "1789568298875",
+          "key" : "2jzdnp9vczcn",
+          "mapWidth" : "640",
+          "mapHeight" : "360"
+        }).render();
+      </script>
+      <figure class="location-sketch" id="locationSketch">
+        <img src="assets/KDW 약도.png" alt="KDW웨딩 약도" id="locationSketchImg">
+        <figcaption class="location-sketch-caption">약도</figcaption>
+      </figure>
       <div class="map-buttons">
-        <div class="map-btn">네이버</div>
-        <div class="map-btn">카카오</div>
-        <div class="map-btn">티맵</div>
+        <a class="map-btn" href="https://naver.me/FPn5kMTA" target="_blank" rel="noopener noreferrer">네이버</a>
+        <button type="button" class="map-btn" id="kakaoMapBtn">카카오</button>
+        <a class="map-btn" href="https://tmap.life/11979c6b" target="_blank" rel="noopener noreferrer">티맵</a>
       </div>
       <div class="location-text">지하철 &middot; 5호선 강동역 3번 출구 도보 4분<br>주차 &middot; 건물 지하 2~4층, 2시간 무료</div>
     </section>
@@ -79,6 +99,11 @@
       <div class="closing">With grateful hearts</div>
     </section>
 
+  </div>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">&times;</button>
+    <img src="" alt="" class="lightbox-img" id="lightboxImg">
   </div>
 </main>
 
