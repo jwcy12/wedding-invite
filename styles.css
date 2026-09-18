@@ -65,11 +65,11 @@ a { color: inherit; text-decoration: none; }
      whatever resolution the browser actually needs - no more
      DPR-dependent upscaling/blotchiness from a fixed-size source image,
      and no tiling seams to manage either. */
-  background-image: url('assets/paper-texture.svg');
+  /* background-image: url('assets/paper-texture.svg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  background-attachment: fixed;
+  background-attachment: fixed; */
   color: var(--ink-soft);
   overflow: hidden;
   min-height: 100vh;
