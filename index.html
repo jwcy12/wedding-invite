@@ -7,7 +7,7 @@
 <meta name="description" content="2026년 12월 12일 토요일 오후 3시 20분, KDW웨딩 3층 블랙스톤홀">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+KR:wght@200;300;400;500&family=Pinyon+Script&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@200;300;400;500&family=Pinyon+Script&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <!-- 카카오맵(다음 로드뷰) 퍼가기 로더. 페이지에 지도가 하나뿐이므로 한 번만 로드합니다. -->
 <script charset="UTF-8" class="daum_roughmap_loader_script" src="https://t1.kakaocdn.net/kakaomapweb/roughmap/loader/prod/roughmapLoader.js"></script>
@@ -35,6 +35,26 @@
 
       <div class="snow-pile" id="snowPile" aria-hidden="true"></div>
     </div>
+
+    <section class="block block-greeting">
+      <div class="greeting">겨울의 어느 날,<br>
+        서로에게 따뜻한 사람이 되기로 약속합니다.<br>
+        차가운 계절에도 서로의 온기가 되어<br>
+        함께 걸어가고 싶은<br>
+        두 사람이 부부의 첫걸음을 내딛습니다.<br>
+        소중한 분들을 모시고 저희의 시작을 함께하고 싶습니다.<br>
+        귀한 걸음으로 축복해주세요.</div>
+      <div class="hosts">
+        <div class="host-col">
+          <div class="host-parents">이채민 &middot; 정순애의 아들</div>
+          <div class="host-name">이창용</div>
+        </div>
+        <div class="host-col">
+          <div class="host-parents">백승진 &middot; 전태자의 딸</div>
+          <div class="host-name">백지원</div>
+        </div>
+      </div>
+    </section>
 
     <section class="block block-datetime">
       <div class="date-mono">DECEMBER 12, 2026 &middot; SATURDAY</div>
@@ -78,15 +98,17 @@
         <figcaption class="location-sketch-caption">약도</figcaption>
       </figure>
       <div class="map-buttons">
-        <a class="map-btn" href="https://naver.me/FPn5kMTA" target="_blank" rel="noopener noreferrer">네이버</a>
-        <button type="button" class="map-btn" id="kakaoMapBtn">카카오</button>
-        <a class="map-btn" href="https://tmap.life/11979c6b" target="_blank" rel="noopener noreferrer">티맵</a>
+        <a class="map-btn pill-btn" href="https://naver.me/FPn5kMTA" target="_blank" rel="noopener noreferrer">네이버</a>
+        <button type="button" class="map-btn pill-btn" id="kakaoMapBtn">카카오</button>
+        <a class="map-btn pill-btn" href="https://tmap.life/11979c6b" target="_blank" rel="noopener noreferrer">티맵</a>
       </div>
       <div class="location-text">지하철 &middot; 5호선 강동역 3번 출구 도보 4분<br>주차 &middot; 건물 지하 2~4층, 2시간 무료</div>
+      <div class="transit-accordion" id="transitAccordion"></div>
     </section>
 
     <section class="block block-accounts">
       <div class="section-title">마음 전하실 곳</div>
+      <div class="accounts-note">보내주시는 따뜻한 마음에<br>진심으로 감사드리며<br>행복한 모습으로 보답하겠습니다.</div>
       <div class="accounts" id="accounts"></div>
     </section>
 
@@ -103,7 +125,9 @@
 
   <div class="lightbox" id="lightbox" hidden>
     <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">&times;</button>
+    <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="이전 사진">&#8249;</button>
     <img src="" alt="" class="lightbox-img" id="lightboxImg">
+    <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="다음 사진">&#8250;</button>
   </div>
 </main>
 

@@ -1,5 +1,35 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+
+  /* Light "paper" theme tokens. Every text/border/fill color below the
+     :root block references one of these so contrast stays consistent
+     and easy to re-check in one place. Values are picked to clear
+     WCAG AA (>=4.5:1) against both the average tone of assets/bg-paper.png
+     (~#97ABBE) and its lighter highlight areas. */
+  --ink: #1F2A33;         /* primary text: names, time, values, amounts */
+  --ink-soft: #2E3A43;    /* secondary text: labels, captions, body copy */
+  --hairline: rgba(31, 42, 51, .16);   /* thin dividers between rows */
+  --hairline-soft: rgba(31, 42, 51, .10);
+
+  /* Minimal "Toss/Apple" surface system: cards are near-invisible tonal
+     fills (barely darker/whiter than the page) separated by soft
+     diffused shadow instead of a hard outline. */
+  --card-bg: rgba(255, 255, 255, .34);
+  --card-bg-soft: rgba(255, 255, 255, .22);
+  --shadow-card: 0 1px 2px rgba(20, 28, 36, .05), 0 10px 28px rgba(20, 28, 36, .09);
+  --shadow-card-sm: 0 1px 2px rgba(20, 28, 36, .05), 0 4px 14px rgba(20, 28, 36, .07);
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  --fill-btn: rgba(31, 42, 51, .07);
+  --fill-btn-hover: rgba(31, 42, 51, .13);
+  --hover-bg: rgba(31, 42, 51, .06);
+
+  --sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --snow: #E7EEF4;
+  --paper-fallback: #9BB0C4; /* shown briefly before bg-paper.png loads */
 }
 
 * { box-sizing: border-box; }
@@ -10,7 +40,7 @@ html, body {
 
 body {
   margin: 0;
-  background: #0A0A0A;
+  background: var(--paper-fallback);
   font-family: 'Noto Serif KR', serif;
 }
 
@@ -20,8 +50,13 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   max-width: 430px;
   margin: 0 auto;
-  background: #0A0A0A;
-  color: #F2F2F0;
+  background-color: var(--paper-fallback);
+  background-image: url('assets/bg-paper.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink-soft);
   overflow: hidden;
   min-height: 100vh;
 }
@@ -39,7 +74,7 @@ a { color: inherit; text-decoration: none; }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #050505;
+    background: #4C6072;
   }
 
   .invite {
@@ -47,12 +82,18 @@ a { color: inherit; text-decoration: none; }
     height: min(932px, 98vh);
     min-height: 0;
     flex: none;
-    border: 1px solid #2A2A2A;
+    border: 1px solid rgba(255, 255, 255, .45);
     border-radius: 28px;
-    box-shadow: 0 22px 60px rgba(0, 0, 0, .5);
+    box-shadow: 0 22px 60px rgba(15, 22, 28, .45);
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    /* .invite is its own scroll container here (body no longer scrolls),
+       so "fixed" must mean fixed to THIS box, not the browser viewport -
+       background-attachment: fixed would anchor to the viewport instead
+       and look detached from the small framed mockup. scroll (the
+       default) ties the image to the element's own box. */
+    background-attachment: scroll;
   }
 }
 
@@ -71,6 +112,9 @@ a { color: inherit; text-decoration: none; }
   animation-name: omFall, omSway, omFade;
   animation-timing-function: linear, ease-in-out, ease-in-out;
   animation-iteration-count: infinite;
+  /* A soft dark halo keeps each flake readable regardless of what part
+     of the photographic paper texture (or a photo/card) sits behind it. */
+  filter: drop-shadow(0 0 1px rgba(31, 42, 51, .45)) drop-shadow(0 0 2px rgba(31, 42, 51, .22));
 }
 
 .snowflake svg {
@@ -125,8 +169,8 @@ a { color: inherit; text-decoration: none; }
   height: 0;
   max-height: 44px;
   pointer-events: none;
-  background: linear-gradient(to bottom, rgba(234, 242, 250, .45) 0%, rgba(234, 242, 250, .82) 45%, #EAF2FA 100%);
-  box-shadow: 0 -6px 18px rgba(234, 242, 250, .28);
+  background: linear-gradient(to bottom, rgba(231, 238, 244, .55) 0%, rgba(231, 238, 244, .88) 45%, #F4F7FA 100%);
+  box-shadow: 0 -4px 14px rgba(31, 42, 51, .15);
   clip-path: polygon(
     0% 9px, 6% 3px, 12% 7px, 18% 2px, 24% 6px, 30% 1px, 36% 5px, 42% 8px,
     48% 3px, 54% 6px, 60% 2px, 66% 7px, 72% 4px, 78% 8px, 84% 3px, 90% 6px,
@@ -135,11 +179,43 @@ a { color: inherit; text-decoration: none; }
   transition: height 1.4s ease-out;
 }
 
+/* Burst particles: spawned in JS right as the intro section starts
+   scrolling out of view, scattering the pile instead of letting it just
+   vanish. Anchored the same way the pile is (bottom of intro-section). */
+.snow-burst-particle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background: var(--snow);
+  box-shadow: 0 0 2px rgba(31, 42, 51, .25);
+  pointer-events: none;
+  z-index: 2;
+  animation-name: snowBurst;
+  /* Plain decelerating ease-out - no bounce/elastic overshoot, so the
+     particles settle into their drift rather than springing off it. */
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+@keyframes snowBurst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  60% {
+    opacity: .5;
+  }
+  100% {
+    transform: translate(var(--burst-dx), var(--burst-dy)) scale(.7);
+    opacity: 0;
+  }
+}
+
 .eyebrow {
   font-family: 'Cormorant Garamond', serif;
   font-size: 12px;
   letter-spacing: .32em;
-  color: #9A9A94;
+  color: var(--ink-soft);
 }
 
 .block-hero { padding: 0 30px; }
@@ -158,31 +234,61 @@ a { color: inherit; text-decoration: none; }
   font-size: 30px;
   line-height: 1.05;
   letter-spacing: .01em;
-  color: #FFFFFF;
+  color: var(--ink);
 }
-.names .amp { font-size: 22px; color: #A8A8A2; }
+.names .amp { font-size: 22px; color: var(--ink-soft); }
 .invite-line {
   margin-top: 34px;
   font-family: 'Cormorant Garamond', serif;
   font-size: 13px;
   letter-spacing: .18em;
   line-height: 2.1;
-  color: #C9C9C4;
+  color: var(--ink-soft);
 }
 
-.block-datetime { padding: 110px 30px 0; }
+.block-greeting { padding: 100px 30px 0; }
+.greeting {
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 2.1;
+  letter-spacing: .01em;
+  color: var(--ink-soft);
+}
+.hosts {
+  margin-top: 34px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.host-col { padding: 0 14px; }
+.host-col + .host-col { border-left: 1px solid var(--hairline); }
+.host-parents {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: .04em;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.host-name {
+  margin-top: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  letter-spacing: .1em;
+  color: var(--ink);
+}
+
+.block-datetime { padding: 100px 30px 0; }
 .date-mono {
   font-family: 'Spline Sans Mono', monospace;
   font-size: 11px;
   letter-spacing: .2em;
-  color: #9A9A94;
+  color: var(--ink-soft);
 }
 .time {
   margin-top: 12px;
   font-family: 'Cormorant Garamond', serif;
   font-size: 28px;
   letter-spacing: .14em;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 .time .pm { font-size: 22px; }
 .venue {
@@ -190,21 +296,24 @@ a { color: inherit; text-decoration: none; }
   font-size: 13px;
   font-weight: 300;
   line-height: 1.9;
-  color: #C9C9C4;
+  color: var(--ink-soft);
 }
 
-.block-calendar { padding: 0 24px; }
+.block-calendar { padding: 40px 24px 0; }
 .cal-card {
-  margin-top: 38px;
-  border: 1px solid #2A2A2A;
-  padding: 26px 18px;
+  padding: 30px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .cal-title {
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 14px;
   letter-spacing: .28em;
-  color: #9A9A94;
+  color: var(--ink-soft);
 }
 .cal-weekdays {
   margin-top: 18px;
@@ -212,7 +321,7 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: repeat(7, 1fr);
   font-family: 'Spline Sans Mono', monospace;
   font-size: 10px;
-  color: #767670;
+  color: var(--ink-soft);
   text-align: center;
 }
 .cal-grid {
@@ -237,33 +346,75 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Cormorant Garamond', serif;
   font-size: 15px;
   background: transparent;
-  color: #E8E8E6;
+  color: var(--ink);
 }
-.cal-cell.sun span { color: #8C8C8C; }
-.cal-cell.marked span { background: #FFFFFF; color: #0A0A0A; }
+.cal-cell.sun span { color: var(--ink-soft); }
+.cal-cell.marked span { background: var(--ink); color: #FFFFFF; }
 .cal-cell.empty span { color: transparent; }
 
 .countdown {
-  margin-top: 20px;
+  margin-top: 26px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 8px;
   text-align: center;
 }
-.countdown div {
-  border: 1px solid #2A2A2A;
-  padding: 11px 0;
+.cd-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.countdown .cd-val {
+.cd-ring-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+}
+.cd-ring {
+  width: 100%;
+  height: 100%;
+  /* Start the progress arc at 12 o'clock instead of SVG's default 3
+     o'clock. The remaining arc stays pinned to 12 and its far edge
+     recedes back toward 12 as the unit's value shrinks - i.e. it
+     empties counter-clockwise. */
+  transform: rotate(-90deg);
+}
+.cd-ring-track {
+  fill: none;
+  stroke: var(--hairline-soft);
+  stroke-width: 2;
+}
+.cd-ring-progress {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+/* DAYS/HRS/MIN update rarely enough that a 1s glide always finishes
+   well before their next tick, settling exactly on the correct value.
+   SEC updates every 1000ms - the same length as the transition - so it
+   never finishes gliding before being retargeted again and visibly
+   lags behind its true value; a shorter transition lets it fully
+   settle each second like the others do. */
+#cd-sec-ring {
+  transition-duration: .3s;
+}
+.cd-val {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 21px;
-  color: #FFFFFF;
+  font-size: 18px;
+  color: var(--ink);
 }
-.countdown .cd-key {
+.cd-key {
+  margin-top: 8px;
   font-family: 'Spline Sans Mono', monospace;
   font-size: 9px;
   letter-spacing: .12em;
-  color: #767670;
+  color: var(--ink-soft);
 }
 
 .section-title {
@@ -271,15 +422,15 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Cormorant Garamond', serif;
   font-size: 14px;
   letter-spacing: .28em;
-  color: #9A9A94;
+  color: var(--ink-soft);
 }
 
-.block-gallery { padding: 44px 24px 0; }
+.block-gallery { padding: 100px 24px 0; }
 .gallery-grid {
-  margin-top: 18px;
+  margin-top: 20px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 5px;
 }
 .gallery-tile {
   position: relative;
@@ -287,14 +438,20 @@ a { color: inherit; text-decoration: none; }
   border: 0;
   margin: 0;
   padding: 0;
-  background: repeating-linear-gradient(135deg, #171717 0 5px, #1F1F1F 5px 10px);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--card-bg-soft);
+  background-image: repeating-linear-gradient(135deg, rgba(31, 42, 51, .05) 0 5px, rgba(31, 42, 51, .1) 5px 10px);
+  box-shadow: var(--shadow-card-sm);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
   font: inherit;
   font-family: 'Spline Sans Mono', monospace;
   font-size: 9px;
-  color: #767670;
+  color: var(--ink-soft);
   cursor: default;
   appearance: none;
 }
@@ -311,21 +468,30 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   z-index: 1;
 }
+/* Once a real photo has loaded, the placeholder number must not show
+   through at all (not just be painted over) - hide it outright rather
+   than relying on stacking order. It stays visible as a fallback only
+   while there's no photo (not yet added, or failed to load). */
+.gallery-tile.has-image .gallery-tile-label {
+  display: none;
+}
 
-.block-location { padding: 44px 24px 0; }
+.block-location { padding: 100px 24px 0; }
 .map-embed {
   position: relative;
-  margin-top: 16px;
+  margin-top: 20px;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border: 1px solid #2A2A2A;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #111111;
-  transition: box-shadow .3s ease, border-color .3s ease;
+  background: var(--card-bg-soft);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: box-shadow .3s ease;
 }
 .map-embed--highlight {
-  border-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+  box-shadow: 0 0 0 3px rgba(31, 42, 51, .18), var(--shadow-card);
 }
 /* Kakao's roughmap embed is a fixed 640x360px widget; script.js scales
    this wrapper down with a CSS transform so it fits the 430px frame
@@ -335,92 +501,99 @@ a { color: inherit; text-decoration: none; }
   transform-origin: top left;
 }
 .location-sketch {
-  margin: 12px 0 0;
+  margin: 14px 0 0;
 }
 .location-sketch img {
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid #2A2A2A;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-sm);
 }
 .location-sketch-caption {
   margin-top: 8px;
   font-family: 'Spline Sans Mono', monospace;
   font-size: 10px;
   letter-spacing: .12em;
-  color: #767670;
+  color: var(--ink-soft);
   text-align: center;
 }
 .map-buttons {
-  margin-top: 8px;
+  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 8px;
 }
-.map-btn {
-  display: block;
-  width: 100%;
-  border: 1px solid #2A2A2A;
-  padding: 11px 0;
-  text-align: center;
-  font: inherit;
-  font-size: 11px;
-  color: #E4E4E0;
-  background: none;
-  appearance: none;
-  cursor: pointer;
-  transition: background .15s ease;
-}
-.map-btn:hover { background: #161616; }
 .location-text {
-  margin-top: 16px;
-  font-size: 12px;
+  margin-top: 20px;
+  font-size: 13px;
   font-weight: 300;
   line-height: 1.9;
-  color: #C9C9C4;
+  color: var(--ink-soft);
 }
-
-.block-accounts { padding: 44px 24px 0; }
-.accounts {
-  margin-top: 18px;
+.transit-accordion {
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
+}
+.transit-line {
+  line-height: 1.9;
+}
+
+.block-accounts { padding: 100px 24px 0; }
+.accounts {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Shared "grouped list" card used by the accounts accordion and the
+   transit-info accordion: one soft-shadowed rounded card containing a
+   header row and a collapsible body, clipped to the card's own radius
+   so neither part needs its own border or corner. */
+.account-group {
+  border-radius: var(--radius-lg);
+  background: var(--card-bg-soft);
+  box-shadow: var(--shadow-card-sm);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
 }
 .account-header {
   width: 100%;
-  border: 1px solid #2A2A2A;
-  padding: 15px 16px;
+  padding: 17px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
-  color: #F2F2F0;
+  font-weight: 500;
+  color: var(--ink);
   background: none;
+  border: 0;
   appearance: none;
   transition: background .15s ease;
 }
-.account-header:hover { background: #161616; }
-.account-header .caret { color: #767670; font-size: 11px; }
+.account-header:hover { background: var(--hover-bg); }
+.account-header .caret { color: var(--ink-soft); font-size: 11px; font-weight: 400; }
 .account-rows {
-  border: 1px solid #2A2A2A;
-  border-top: 0;
-  padding: 4px 16px 12px;
+  padding: 0 18px 16px;
 }
 .account-rows.collapsed { display: none; }
 .account-row {
-  padding: 11px 0;
-  border-bottom: 1px solid #1E1E1E;
+  padding: 12px 0;
+  border-top: 1px solid var(--hairline-soft);
   font-size: 12px;
   line-height: 1.8;
   text-align: left;
 }
-.account-row:last-child { border-bottom: 0; }
-.account-row .who { color: #9A9A94; font-size: 11px; }
+.account-row:first-child { border-top: 0; }
+.account-row .who { color: var(--ink-soft); font-size: 11px; }
 .account-row-bottom {
-  margin-top: 2px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -429,60 +602,114 @@ a { color: inherit; text-decoration: none; }
 .account-row .bank {
   font-family: 'Spline Sans Mono', monospace;
   font-size: 11px;
-  color: #FFFFFF;
+  color: var(--ink);
+}
+.accounts-note {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 2;
+  color: var(--ink-soft);
+}
+
+/* ---------- minimal pill buttons ---------- */
+/* Shared by CALL/SMS, the map links, and the account-number copy
+   button: a filled, fully-rounded, icon-friendly button instead of an
+   outlined rectangle - the "Toss/Apple" tone the rest of the redesign
+   is built around. */
+.pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--fill-btn);
+  color: var(--ink-soft);
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  transition: background .15s ease;
+}
+.pill-btn:hover, .pill-btn:active { background: var(--fill-btn-hover); }
+.pill-btn svg { flex: none; display: block; }
+
+.map-btn {
+  width: 100%;
+  padding: 13px 0;
+  font-size: 12px;
+  font-weight: 500;
 }
 .copy-btn {
   flex: none;
-  border: 1px solid #2A2A2A;
-  padding: 5px 10px;
-  font: inherit;
-  font-family: 'Spline Sans Mono', monospace;
+  padding: 7px 13px;
   font-size: 10px;
-  color: #E4E4E0;
-  background: none;
-  appearance: none;
-  cursor: pointer;
-  transition: background .15s ease;
+  font-weight: 500;
 }
-.copy-btn:hover { background: #161616; }
 
-.block-contact { padding: 44px 24px 0; }
+.block-contact { padding: 100px 24px 0; }
 .contact-list {
-  margin-top: 14px;
-  border: 1px solid #2A2A2A;
+  margin-top: 20px;
+  border-radius: var(--radius-lg);
+  background: var(--card-bg-soft);
+  box-shadow: var(--shadow-card-sm);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .contact-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 13px 14px;
-  border-bottom: 1px solid #1E1E1E;
-  font-size: 12px;
-  color: #F2F2F0;
+  gap: 10px;
+  min-height: 44px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--hairline-soft);
+  font-family: var(--sans);
+  color: var(--ink);
 }
-.contact-row:last-child { border-bottom: 0; }
-.contact-row .who { color: #9A9A94; }
-.contact-actions { display: flex; gap: 6px; }
+.contact-row:first-child { border-top: 0; }
+/* Sans-serif for this information-dense area, with weight/color doing
+   the hierarchy: the relation label is small and muted, the name is
+   larger, semibold, and full-strength ink. The label column has a
+   fixed width (sized to the longest label, "신랑 아버지"/"신부 어머니")
+   so every name lines up in the same spot down the list, like a table. */
+.contact-label {
+  flex: 0 0 70px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.contact-name {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.contact-actions {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
 .contact-actions a {
-  display: block;
-  border: 1px solid #2A2A2A;
-  padding: 5px 10px;
-  font-family: 'Spline Sans Mono', monospace;
+  padding: 7px 14px;
   font-size: 10px;
-  color: #E4E4E0;
-  transition: background .15s ease;
+  font-weight: 500;
+  font-family: var(--sans);
 }
-.contact-actions a:hover { background: #161616; }
 
-.block-closing { padding: 46px 0 64px; }
+.block-closing { padding: 100px 0 100px; }
 .closing {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-size: 18px;
-  color: #9A9A94;
+  color: var(--ink-soft);
 }
 
 /* ---------- gallery lightbox ---------- */
+/* Kept as a dark viewer regardless of site theme - a neutral dark
+   backdrop is what makes photos themselves read best, independent of
+   the page's light paper mood. */
 .lightbox {
   position: fixed;
   inset: 0;
@@ -506,7 +733,7 @@ a { color: inherit; text-decoration: none; }
   right: 18px;
   width: 36px;
   height: 36px;
-  border: 1px solid #2A2A2A;
+  border: 1px solid rgba(255, 255, 255, .3);
   border-radius: 50%;
   background: rgba(10, 10, 10, .7);
   color: #F2F2F0;
@@ -517,9 +744,54 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   cursor: pointer;
   appearance: none;
+  z-index: 1;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 50%;
+  background: rgba(10, 10, 10, .7);
+  color: #F2F2F0;
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  appearance: none;
+  z-index: 1;
+  transition: background .15s ease;
+}
+.lightbox-nav:hover { background: rgba(30, 30, 30, .8); }
+.lightbox-nav[hidden] { display: none; }
+.lightbox-prev { left: 10px; }
+.lightbox-next { right: 10px; }
+
+/* Prev/next swap the image content with a quick crossfade instead of
+   repeating the open/close shared-element morph. */
+.lightbox-img {
+  transition: opacity .18s ease;
+}
+.lightbox-img.is-switching {
+  opacity: 0;
+}
+
+/* Shared-element open/close morph (View Transitions API). Browsers
+   without support simply never create these pseudo-elements, so this
+   block is a no-op there - the DOM still updates instantly. */
+::view-transition-group(gallery-active) {
+  animation-duration: .42s;
+  animation-timing-function: cubic-bezier(.2, .7, .2, 1);
 }
 
 /* ---------- toast ---------- */
+/* Also kept dark on purpose: a brief high-contrast chip reads clearly
+   over any part of the page it happens to float above. */
 .toast {
   position: fixed;
   left: 50%;
@@ -528,7 +800,7 @@ a { color: inherit; text-decoration: none; }
   transform: translate(-50%, 12px);
   background: rgba(20, 20, 20, .95);
   color: #F2F2F0;
-  border: 1px solid #2A2A2A;
+  border: 1px solid rgba(255, 255, 255, .12);
   padding: 10px 18px;
   border-radius: 999px;
   font-size: 12px;

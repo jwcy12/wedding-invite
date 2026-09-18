@@ -1,7 +1,7 @@
 (() => {
   const WEDDING_DATE = new Date('2026-12-12T15:20:00+09:00').getTime();
 
-  const galleryLabels = ['01', '02', '03', '04', '05', '06'];
+  const galleryLabels = ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
 
   const accountsData = {
     '신랑측': [
@@ -25,7 +25,31 @@
     { rel: '신부 어머니', name: '전태자', phone: '010-8885-4112' }
   ];
 
+  const transitInfo = [
+    {
+      title: '지하철 이용시',
+      lines: ['서울 5호선 강동역 하차 &middot; 3번출구 바로 앞']
+    },
+    {
+      title: '버스 이용시',
+      lines: [
+        '강동역 하차',
+        '간선버스(파랑) &middot; 130, 341, 342, 370',
+        '지선버스(초록) &middot; 3214, 3316',
+        '직행버스(빨강) &middot; 1113, 1113-1',
+        '일반버스(초록) &middot; 1-4, 30-3, 112-1, 112-5',
+        '공항버스 &middot; 6200(길동사거리 하차)'
+      ]
+    },
+    {
+      title: '주차안내',
+      lines: ['건물 지하 2~4층, 2시간 무료']
+    }
+  ];
+
   const pad = (n) => String(n).padStart(2, '0');
+
+  const ICON_COPY = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 
   function renderCalendar() {
     const grid = document.getElementById('calGrid');
@@ -47,6 +71,15 @@
     grid.append(...cells);
   }
 
+  // Ring geometry shared by all four countdown dials.
+  const CD_RING_R = 30;
+  const CD_RING_CIRC = 2 * Math.PI * CD_RING_R;
+  // The DAYS ring has no natural cycle length like hours/minutes/seconds
+  // do, so its "full" reference is the total day-count captured once at
+  // load time - the ring then reads as "how much of the whole wait is
+  // left," slowly draining to empty as the date approaches.
+  let cdDaysTotal = 1;
+
   function renderCountdown() {
     const el = document.getElementById('countdown');
     const units = [
@@ -56,18 +89,57 @@
       { key: 'SEC', id: 'cd-sec' }
     ];
     units.forEach((u) => {
-      const box = document.createElement('div');
+      const unit = document.createElement('div');
+      unit.className = 'cd-unit';
+
+      const ringWrap = document.createElement('div');
+      ringWrap.className = 'cd-ring-wrap';
+
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('class', 'cd-ring');
+      svg.setAttribute('viewBox', '0 0 72 72');
+
+      const track = document.createElementNS(SVG_NS, 'circle');
+      track.setAttribute('class', 'cd-ring-track');
+      track.setAttribute('cx', '36');
+      track.setAttribute('cy', '36');
+      track.setAttribute('r', String(CD_RING_R));
+
+      const progress = document.createElementNS(SVG_NS, 'circle');
+      progress.setAttribute('class', 'cd-ring-progress');
+      progress.setAttribute('cx', '36');
+      progress.setAttribute('cy', '36');
+      progress.setAttribute('r', String(CD_RING_R));
+      progress.setAttribute('id', `${u.id}-ring`);
+      progress.style.strokeDasharray = String(CD_RING_CIRC);
+      progress.style.strokeDashoffset = '0';
+
+      svg.append(track, progress);
+
       const val = document.createElement('div');
       val.className = 'cd-val';
       val.id = u.id;
+
+      ringWrap.append(svg, val);
+
       const key = document.createElement('div');
       key.className = 'cd-key';
       key.textContent = u.key;
-      box.append(val, key);
-      el.appendChild(box);
+
+      unit.append(ringWrap, key);
+      el.appendChild(unit);
     });
+
+    cdDaysTotal = Math.max(1, Math.ceil((WEDDING_DATE - Date.now()) / 86400000));
     tickCountdown();
     setInterval(tickCountdown, 1000);
+  }
+
+  function setRing(id, fraction) {
+    const ring = document.getElementById(`${id}-ring`);
+    if (!ring) return;
+    const clamped = Math.max(0, Math.min(1, fraction));
+    ring.style.strokeDashoffset = String(CD_RING_CIRC * (1 - clamped));
   }
 
   function tickCountdown() {
@@ -80,6 +152,10 @@
     document.getElementById('cd-hrs').textContent = pad(hh);
     document.getElementById('cd-min').textContent = pad(mm);
     document.getElementById('cd-sec').textContent = pad(ss);
+    setRing('cd-days', dd / cdDaysTotal);
+    setRing('cd-hrs', hh / 24);
+    setRing('cd-min', mm / 60);
+    setRing('cd-sec', ss / 60);
   }
 
   const GALLERY_EXTS = ['jpg', 'jpeg', 'png'];
@@ -114,7 +190,7 @@
       tile.appendChild(img);
 
       tile.addEventListener('click', () => {
-        if (tile.classList.contains('has-image')) openLightbox(img.src, img.alt);
+        if (tile.classList.contains('has-image')) openLightbox(tile);
       });
 
       grid.appendChild(tile);
@@ -125,6 +201,7 @@
     const wrap = document.getElementById('accounts');
     Object.entries(accountsData).forEach(([side, rows]) => {
       const group = document.createElement('div');
+      group.className = 'account-group';
 
       const header = document.createElement('button');
       header.type = 'button';
@@ -140,7 +217,7 @@
           <div class="who">${r.rel} &middot; ${r.name}</div>
           <div class="account-row-bottom">
             <div class="bank">${r.bank} ${r.no}</div>
-            <button type="button" class="copy-btn">복사</button>
+            <button type="button" class="copy-btn pill-btn">${ICON_COPY}<span>복사</span></button>
           </div>
         `;
         row.querySelector('.copy-btn').addEventListener('click', () => {
@@ -161,47 +238,202 @@
   }
 
   function renderContacts() {
-    const list = document.getElementById('contactList');
+    const wrap = document.getElementById('contactList');
     contacts.forEach((p) => {
       const digits = p.phone.replace(/-/g, '');
       const row = document.createElement('div');
       row.className = 'contact-row';
       row.innerHTML = `
-        <div><span class="who">${p.rel}</span>&nbsp;${p.name}</div>
+        <span class="contact-label">${p.rel}</span>
+        <span class="contact-name">${p.name}</span>
         <div class="contact-actions">
-          <a href="tel:${digits}">CALL</a>
-          <a href="sms:${digits}">SMS</a>
+          <a href="tel:${digits}" class="pill-btn">CALL</a>
+          <a href="sms:${digits}" class="pill-btn">SMS</a>
         </div>
       `;
-      list.appendChild(row);
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderTransitAccordion() {
+    const wrap = document.getElementById('transitAccordion');
+    if (!wrap) return;
+    transitInfo.forEach((item) => {
+      const group = document.createElement('div');
+      group.className = 'account-group';
+
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.className = 'account-header';
+      header.innerHTML = `<span>${item.title}</span><span class="caret">열기 +</span>`;
+
+      const body = document.createElement('div');
+      body.className = 'account-rows collapsed';
+      item.lines.forEach((line) => {
+        const row = document.createElement('div');
+        row.className = 'account-row transit-line';
+        row.innerHTML = line;
+        body.appendChild(row);
+      });
+
+      header.addEventListener('click', () => {
+        const open = !body.classList.contains('collapsed');
+        body.classList.toggle('collapsed', open);
+        header.querySelector('.caret').textContent = open ? '열기 +' : '닫기 −';
+      });
+
+      group.append(header, body);
+      wrap.appendChild(group);
     });
   }
 
   // ---------- gallery lightbox ----------
-  function openLightbox(src, alt) {
+  // Shared-element open/close morph uses the View Transitions API when
+  // available: the same view-transition-name is handed off between the
+  // clicked grid thumbnail and the fullscreen lightbox image, so the
+  // browser interpolates position/size between them automatically. On
+  // browsers without support, startViewTransition is simply absent and
+  // the DOM mutation just runs immediately - open/close still work,
+  // there's just no morph.
+  const GALLERY_VT_NAME = 'gallery-active';
+  let lightboxTiles = [];
+  let lightboxIndex = -1;
+
+  function withViewTransition(mutate) {
+    if (typeof document.startViewTransition === 'function') {
+      const transition = document.startViewTransition(mutate);
+      // The transition can reject (e.g. it gets interrupted by another
+      // one starting) independent of whether the DOM mutation itself
+      // succeeded - swallow that so it doesn't surface as an unhandled
+      // rejection; there's nothing more to do about it either way.
+      transition.ready.catch(() => {});
+      transition.finished.catch(() => {});
+    } else {
+      mutate();
+    }
+  }
+
+  function updateLightboxNavVisibility() {
+    const prevBtn = document.getElementById('lightboxPrev');
+    const nextBtn = document.getElementById('lightboxNext');
+    const multiple = lightboxTiles.length > 1;
+    if (prevBtn) prevBtn.hidden = !multiple;
+    if (nextBtn) nextBtn.hidden = !multiple;
+  }
+
+  function openLightbox(tile) {
+    const tiles = Array.from(document.querySelectorAll('.gallery-tile.has-image'));
+    const idx = tiles.indexOf(tile);
+    if (idx === -1) return;
+    lightboxTiles = tiles;
+    lightboxIndex = idx;
+
     const lightbox = document.getElementById('lightbox');
-    const img = document.getElementById('lightboxImg');
-    img.src = src;
-    img.alt = alt;
-    lightbox.hidden = false;
+    const lightboxImg = document.getElementById('lightboxImg');
+    const gridImg = tile.querySelector('img');
+    if (!gridImg) return;
+
+    // The grid thumbnail "owns" the shared name right up to the moment
+    // the transition captures the old state.
+    gridImg.style.viewTransitionName = GALLERY_VT_NAME;
+
+    withViewTransition(async () => {
+      // Hand the name off to the lightbox image for the new state, so
+      // exactly one element claims it in each snapshot phase.
+      gridImg.style.viewTransitionName = '';
+      lightboxImg.style.viewTransitionName = GALLERY_VT_NAME;
+      lightboxImg.src = gridImg.src;
+      lightboxImg.alt = gridImg.alt;
+      lightbox.hidden = false;
+      updateLightboxNavVisibility();
+      // The new state is snapshotted on the next frame after this
+      // callback settles - without waiting for the freshly-assigned src
+      // to actually decode, that snapshot can catch the image at 0x0
+      // and the transition fails to capture it.
+      try { await lightboxImg.decode(); } catch (err) { /* no-op */ }
+    });
   }
 
   function closeLightbox() {
     const lightbox = document.getElementById('lightbox');
-    const img = document.getElementById('lightboxImg');
-    lightbox.hidden = true;
-    img.src = '';
+    if (lightbox.hidden) return;
+    const lightboxImg = document.getElementById('lightboxImg');
+    const tile = lightboxTiles[lightboxIndex];
+    const gridImg = tile ? tile.querySelector('img') : null;
+
+    withViewTransition(async () => {
+      lightboxImg.style.viewTransitionName = '';
+      if (gridImg) {
+        gridImg.style.viewTransitionName = GALLERY_VT_NAME;
+        try { await gridImg.decode(); } catch (err) { /* no-op */ }
+      }
+      lightbox.hidden = true;
+      lightboxImg.src = '';
+    });
+
+    lightboxTiles = [];
+    lightboxIndex = -1;
+  }
+
+  // Prev/next deliberately skip the shared-element morph (it should
+  // only happen once, on open/close) - just a quick opacity crossfade
+  // of the image content while it stays fullscreen in place.
+  function showLightboxPhoto(step) {
+    const n = lightboxTiles.length;
+    if (n === 0) return;
+    lightboxIndex = ((lightboxIndex + step) % n + n) % n; // circular wrap
+    const tile = lightboxTiles[lightboxIndex];
+    const gridImg = tile.querySelector('img');
+    const lightboxImg = document.getElementById('lightboxImg');
+
+    lightboxImg.classList.add('is-switching');
+    setTimeout(() => {
+      lightboxImg.src = gridImg.src;
+      lightboxImg.alt = gridImg.alt;
+      requestAnimationFrame(() => lightboxImg.classList.remove('is-switching'));
+    }, 160);
   }
 
   function initLightbox() {
     const lightbox = document.getElementById('lightbox');
     const closeBtn = document.getElementById('lightboxClose');
+    const prevBtn = document.getElementById('lightboxPrev');
+    const nextBtn = document.getElementById('lightboxNext');
+
     closeBtn.addEventListener('click', closeLightbox);
+    prevBtn.addEventListener('click', () => showLightboxPhoto(-1));
+    nextBtn.addEventListener('click', () => showLightboxPhoto(1));
+
     lightbox.addEventListener('click', (e) => {
       if (e.target === lightbox) closeLightbox();
     });
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !lightbox.hidden) closeLightbox();
+      if (lightbox.hidden) return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') showLightboxPhoto(1);
+      else if (e.key === 'ArrowLeft') showLightboxPhoto(-1);
+    });
+
+    // Touch swipe, for the mobile frame.
+    let touchStartX = null;
+    let touchStartY = null;
+    lightbox.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    lightbox.addEventListener('touchend', (e) => {
+      if (touchStartX === null) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      touchStartX = null;
+      touchStartY = null;
+      const SWIPE_THRESHOLD = 40;
+      // Ignore mostly-vertical drags so a scroll attempt doesn't get
+      // mistaken for a swipe.
+      if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) showLightboxPhoto(1);
+      else showLightboxPhoto(-1);
     });
   }
 
@@ -349,10 +581,76 @@
     if (pile) pile.style.height = snowPileHeight + 'px';
   }
 
+  // Scatters the current pile into a burst of small particles the moment
+  // the intro section starts scrolling out of view, then resets it to 0
+  // so it piles up from scratch again next time the section is in view.
+  const SNOW_BURST_PARTICLES = 20;
+
+  function burstSnowPile() {
+    const pile = document.getElementById('snowPile');
+    const intro = document.querySelector('.intro-section');
+    if (!pile || !intro || snowPileHeight <= 0) return;
+
+    const pileWidth = pile.getBoundingClientRect().width;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < SNOW_BURST_PARTICLES; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'snow-burst-particle';
+      // Sized like the falling snowflakes themselves, not bigger - a
+      // burst of same-scale flakes reads as "scattered", oversized dots
+      // read as "confetti".
+      const size = 1.6 + Math.random() * 3;
+      // Mostly-sideways drift with only a faint upward lift, like a
+      // gust catching loose snow - no full-circle "explosion" vectors,
+      // and never drifting downward.
+      const dx = (Math.random() * 2 - 1) * 24;
+      const dy = -(3 + Math.random() * 12);
+      particle.style.left = (Math.random() * pileWidth) + 'px';
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      particle.style.setProperty('--burst-dx', dx + 'px');
+      particle.style.setProperty('--burst-dy', dy + 'px');
+      particle.style.animationDuration = (0.65 + Math.random() * 0.35) + 's';
+      particle.style.animationDelay = (Math.random() * 0.08) + 's';
+      frag.appendChild(particle);
+    }
+    intro.appendChild(frag);
+
+    // Collapse the bar itself quickly (overriding its normal slow-growth
+    // transition) while the particles fly, instead of leaving a flat
+    // block sitting there until the particles finish.
+    pile.style.transition = 'height .3s ease-in, opacity .3s ease-in';
+    pile.style.opacity = '0';
+    pile.style.height = '0px';
+    snowPileHeight = 0;
+
+    setTimeout(() => {
+      intro.querySelectorAll('.snow-burst-particle').forEach((el) => el.remove());
+      pile.style.transition = '';
+      pile.style.opacity = '';
+    }, 1150); // safely past the longest particle duration (~1s) + its delay
+  }
+
+  function initSnowPileBurst() {
+    const intro = document.querySelector('.intro-section');
+    if (!intro || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Any drop below fully-visible means the section has started
+          // leaving the viewport (scrolling away in either direction).
+          if (entry.intersectionRatio < 1) burstSnowPile();
+        });
+      },
+      { threshold: [0, 0.25, 0.5, 0.75, 0.99, 1] }
+    );
+    observer.observe(intro);
+  }
+
   function renderSnow() {
     const field = document.getElementById('snowfield');
     const n = 30;
-    const color = '#EAF2FA';
+    const color = '#E7EEF4';
     const seed = 51.7742;
     const sizeMin = 1.8, sizeMax = 5;
     const fall = 3600;
@@ -395,9 +693,11 @@
   renderGallery();
   renderAccounts();
   renderContacts();
+  renderTransitAccordion();
   renderSnow();
   initLightbox();
   initLocationSketch();
   initKakaoMap();
   initKakaoMapButton();
+  initSnowPileBurst();
 })();
