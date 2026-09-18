@@ -4,8 +4,9 @@
   /* Light "paper" theme tokens. Every text/border/fill color below the
      :root block references one of these so contrast stays consistent
      and easy to re-check in one place. Values are picked to clear
-     WCAG AA (>=4.5:1) against both the average tone of assets/bg-paper.webp
-     (~#97ABBE) and its lighter highlight areas. */
+     WCAG AA (>=4.5:1) against both the flat page background color
+     (--paper-bg) and the lighter highlight areas the grain texture adds
+     on top of it. */
   --ink: #1F2A33;         /* primary text: names, time, values, amounts */
   --ink-soft: #2E3A43;    /* secondary text: labels, captions, body copy */
   --hairline: rgba(31, 42, 51, .16);   /* thin dividers between rows */
@@ -29,7 +30,10 @@
   --sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --snow: #E7EEF4;
-  --paper-fallback: #9BB0C4; /* shown briefly before bg-paper.webp loads */
+  /* Flat base tone behind the SVG grain texture (not just a load
+     fallback - the texture is alpha-only noise, so this color always
+     shows through it everywhere, not just before it loads). */
+  --paper-bg: #99AABA;
 
   /* backdrop-filter is one of the heaviest things a mobile GPU can be
      asked to do, especially re-sampled behind the constantly-animating
@@ -45,7 +49,7 @@ html, body {
 
 body {
   margin: 0;
-  background: var(--paper-fallback);
+  background: var(--paper-bg);
   font-family: 'Noto Serif KR', serif;
 }
 
@@ -55,11 +59,16 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   max-width: 430px;
   margin: 0 auto;
-  background-color: var(--paper-fallback);
-  background-image: url('assets/bg-paper.webp');
+  background-color: var(--paper-bg);
+  /* paper-texture.svg is a procedural feTurbulence grain (alpha-only,
+     over transparent) rather than a raster photo, so it rasterizes at
+     whatever resolution the browser actually needs - no more
+     DPR-dependent upscaling/blotchiness from a fixed-size source image,
+     and no tiling seams to manage either. */
+  background-image: url('assets/paper-texture.svg');
   background-size: cover;
-  background-position: center;
   background-repeat: no-repeat;
+  background-position: center;
   background-attachment: fixed;
   color: var(--ink-soft);
   overflow: hidden;
@@ -278,7 +287,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink-soft);
 }
 
-.block-greeting { padding: 100px 30px 0; }
+.block-greeting { padding: 100px 24px 0; }
 .greeting {
   font-size: 13px;
   font-weight: 300;
