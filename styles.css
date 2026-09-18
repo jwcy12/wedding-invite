@@ -4,7 +4,7 @@
   /* Light "paper" theme tokens. Every text/border/fill color below the
      :root block references one of these so contrast stays consistent
      and easy to re-check in one place. Values are picked to clear
-     WCAG AA (>=4.5:1) against both the average tone of assets/bg-paper.png
+     WCAG AA (>=4.5:1) against both the average tone of assets/bg-paper.webp
      (~#97ABBE) and its lighter highlight areas. */
   --ink: #1F2A33;         /* primary text: names, time, values, amounts */
   --ink-soft: #2E3A43;    /* secondary text: labels, captions, body copy */
@@ -29,7 +29,12 @@
   --sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --snow: #E7EEF4;
-  --paper-fallback: #9BB0C4; /* shown briefly before bg-paper.png loads */
+  --paper-fallback: #9BB0C4; /* shown briefly before bg-paper.webp loads */
+
+  /* backdrop-filter is one of the heaviest things a mobile GPU can be
+     asked to do, especially re-sampled behind the constantly-animating
+     snow. One shared, moderate radius instead of several 16px instances. */
+  --card-blur: 10px;
 }
 
 * { box-sizing: border-box; }
@@ -51,7 +56,7 @@ a { color: inherit; text-decoration: none; }
   max-width: 430px;
   margin: 0 auto;
   background-color: var(--paper-fallback);
-  background-image: url('assets/bg-paper.png');
+  background-image: url('assets/bg-paper.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -109,15 +114,42 @@ a { color: inherit; text-decoration: none; }
 .snowflake {
   position: absolute;
   top: 0;
-  animation-name: omFall, omSway, omFade;
-  animation-timing-function: linear, ease-in-out, ease-in-out;
+  /* Only transform (fall) and opacity (fade) here - both are
+     GPU-composited and never trigger layout/paint on their own. Sway
+     used to animate margin-left on this same element, which forces a
+     reflow every frame for every flake; it now lives on the nested
+     .snowflake-sway element below, animating its own transform instead,
+     so it doesn't fight with omFall over this element's transform. */
+  animation-name: omFall, omFade;
+  animation-timing-function: linear, ease-in-out;
   animation-iteration-count: infinite;
+  will-change: transform, opacity;
   /* A soft dark halo keeps each flake readable regardless of what part
-     of the photographic paper texture (or a photo/card) sits behind it. */
-  filter: drop-shadow(0 0 1px rgba(31, 42, 51, .45)) drop-shadow(0 0 2px rgba(31, 42, 51, .22));
+     of the photographic paper texture (or a photo/card) sits behind it.
+     One drop-shadow pass (was two stacked) - halves this per-flake
+     filter cost across ~20 permanently-animating elements. */
+  filter: drop-shadow(0 0 1.5px rgba(31, 42, 51, .4));
 }
 
-.snowflake svg {
+.snowflake-sway {
+  width: 100%;
+  height: 100%;
+  animation-name: omSway;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+/* Toggled by script.js (via IntersectionObserver) while the intro
+   section is scrolled out of view. Pausing freezes each flake exactly
+   where it is - no restart jump on resume - and costs nothing while
+   paused, unlike a rAF loop that would need its own start/stop guard. */
+.snowfield.is-paused .snowflake,
+.snowfield.is-paused .snowflake-sway {
+  animation-play-state: paused;
+}
+
+.snowflake-sway svg {
   width: 100%;
   height: 100%;
   display: block;
@@ -128,8 +160,8 @@ a { color: inherit; text-decoration: none; }
   to   { transform: translate3d(0, var(--om-fall, 3600px), 0) rotate(220deg); }
 }
 @keyframes omSway {
-  0%, 100% { margin-left: -10px; }
-  50%      { margin-left: 10px; }
+  0%, 100% { transform: translateX(-10px); }
+  50%      { transform: translateX(10px); }
 }
 @keyframes omFade {
   0%, 100% { opacity: .25; }
@@ -305,8 +337,8 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius-lg);
   background: var(--card-bg);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
 }
 .cal-title {
   text-align: center;
@@ -383,12 +415,19 @@ a { color: inherit; text-decoration: none; }
   stroke: var(--hairline-soft);
   stroke-width: 2;
 }
+/* stroke-dashoffset isn't composited the way transform/opacity are, but
+   a transform: rotate()-based ring (two rotating half-circle wedges,
+   clipped) would mean real added complexity for four 68px circles that
+   update once a second at most - not a meaningful win here. will-change
+   at least lets the browser isolate this into its own paint layer
+   up front instead of promoting/demoting it on every tick. */
 .cd-ring-progress {
   fill: none;
   stroke: var(--ink);
   stroke-width: 2;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s linear;
+  will-change: stroke-dashoffset;
 }
 /* DAYS/HRS/MIN update rarely enough that a 1s glide always finishes
    well before their next tick, settling exactly on the correct value.
@@ -407,6 +446,15 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 18px;
+  /* Flex centers the line box, not the glyph itself - a font's internal
+     leading (ascent/descent above and below the actual numerals) can
+     push that line box's visual center off from the box's geometric
+     center. line-height: 1 tightens the box down to the glyph's own
+     metrics; measured pixel-for-pixel against the ring's center, that
+     alone lands Cormorant Garamond's digits exactly on-center, so no
+     extra transform nudge is needed (one only would have reintroduced
+     a fresh offset). */
+  line-height: 1;
   color: var(--ink);
 }
 .cd-key {
@@ -443,8 +491,10 @@ a { color: inherit; text-decoration: none; }
   background-color: var(--card-bg-soft);
   background-image: repeating-linear-gradient(135deg, rgba(31, 42, 51, .05) 0 5px, rgba(31, 42, 51, .1) 5px 10px);
   box-shadow: var(--shadow-card-sm);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* No backdrop-filter here on purpose: up to 9 of these exist on
+     screen at once, and once a photo loads it fully covers the tile
+     anyway - blurring the paper behind an empty placeholder isn't worth
+     paying that cost 9x over. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -486,8 +536,8 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   background: var(--card-bg-soft);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
   transition: box-shadow .3s ease;
 }
 .map-embed--highlight {
@@ -557,8 +607,8 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius-lg);
   background: var(--card-bg-soft);
   box-shadow: var(--shadow-card-sm);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
   overflow: hidden;
 }
 .account-header {
@@ -654,8 +704,8 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius-lg);
   background: var(--card-bg-soft);
   box-shadow: var(--shadow-card-sm);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
 }
 .contact-row {
   display: flex;
@@ -737,14 +787,22 @@ a { color: inherit; text-decoration: none; }
   border-radius: 50%;
   background: rgba(10, 10, 10, .7);
   color: #F2F2F0;
-  font-size: 20px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   appearance: none;
   z-index: 1;
+}
+/* The X/chevrons used to be text glyphs (&times;, &#8249; etc.) - those
+   sit off-center by a few px in most fonts because their glyph box
+   doesn't match their visual ink, even with line-height: 1. Inline SVG
+   icons with a symmetric viewBox don't have that ambiguity, so flex
+   centering lands them exactly on-center; display: block just avoids
+   the small baseline gap inline SVGs can pick up as flex items. */
+.lightbox-close svg,
+.lightbox-nav svg {
+  display: block;
 }
 
 .lightbox-nav {
@@ -757,8 +815,6 @@ a { color: inherit; text-decoration: none; }
   border-radius: 50%;
   background: rgba(10, 10, 10, .7);
   color: #F2F2F0;
-  font-size: 26px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -785,7 +841,11 @@ a { color: inherit; text-decoration: none; }
    without support simply never create these pseudo-elements, so this
    block is a no-op there - the DOM still updates instantly. */
 ::view-transition-group(gallery-active) {
-  animation-duration: .42s;
+  /* Trimmed from .42s: the open/close morph is a one-off cost (one root
+     snapshot pair + one named-group snapshot pair, not per-frame work),
+     but a shorter window still means less time spent compositing it on
+     slower hardware. */
+  animation-duration: .32s;
   animation-timing-function: cubic-bezier(.2, .7, .2, 1);
 }
 

@@ -158,7 +158,10 @@
     setRing('cd-sec', ss / 60);
   }
 
-  const GALLERY_EXTS = ['jpg', 'jpeg', 'png'];
+  // webp first (the optimized files actually in assets/) - jpg/jpeg/png
+  // stay as a fallback chain in case a future photo gets dropped in
+  // without being converted.
+  const GALLERY_EXTS = ['webp', 'jpg', 'jpeg', 'png'];
 
   function renderGallery() {
     const grid = document.getElementById('galleryGrid');
@@ -574,7 +577,17 @@
   const SNOW_PILE_STEP_PX = 0.85;
   let snowPileHeight = 0;
 
+  // The pile->burst effect only ever happens once per page load: after
+  // the first dispersal, both growing and bursting are permanently
+  // retired (guarded below), even though the intro section can still be
+  // scrolled in and out of view many more times. The base falling-snow
+  // animation is NOT gated by this flag - it keeps pausing/resuming with
+  // visibility for as long as the page is open (see
+  // initIntroVisibilityObserver).
+  let hasSnowDispersed = false;
+
   function growSnowPile() {
+    if (hasSnowDispersed) return;
     if (snowPileHeight >= SNOW_PILE_MAX_PX) return;
     snowPileHeight = Math.min(SNOW_PILE_MAX_PX, snowPileHeight + SNOW_PILE_STEP_PX);
     const pile = document.getElementById('snowPile');
@@ -582,14 +595,21 @@
   }
 
   // Scatters the current pile into a burst of small particles the moment
-  // the intro section starts scrolling out of view, then resets it to 0
-  // so it piles up from scratch again next time the section is in view.
+  // the intro section starts scrolling out of view, then resets it to 0.
+  // Runs at most once (see hasSnowDispersed above) - it does not pile up
+  // and burst again on later visits to the intro section.
   const SNOW_BURST_PARTICLES = 20;
 
   function burstSnowPile() {
+    if (hasSnowDispersed) return;
     const pile = document.getElementById('snowPile');
     const intro = document.querySelector('.intro-section');
     if (!pile || !intro || snowPileHeight <= 0) return;
+
+    // Set before spawning anything, not after: this is what makes the
+    // effect one-shot even if the observer fires again (e.g. more
+    // "ratio < 1" entries) while this burst is still mid-animation.
+    hasSnowDispersed = true;
 
     const pileWidth = pile.getBoundingClientRect().width;
     const frag = document.createDocumentFragment();
@@ -631,14 +651,32 @@
     }, 1150); // safely past the longest particle duration (~1s) + its delay
   }
 
-  function initSnowPileBurst() {
+  // Pausing the CSS animations (rather than removing/re-adding the
+  // flakes) means they resume exactly where they left off, with no
+  // restart jump, and costs nothing while paused - no rAF loop, no
+  // timers, the animations are simply frozen by the browser.
+  function setSnowfieldPlaying(playing) {
+    const field = document.getElementById('snowfield');
+    if (field) field.classList.toggle('is-paused', !playing);
+  }
+
+  function initIntroVisibilityObserver() {
     const intro = document.querySelector('.intro-section');
     if (!intro || typeof IntersectionObserver === 'undefined') return;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // Any drop below fully-visible means the section has started
-          // leaving the viewport (scrolling away in either direction).
+          // Rule 1 (every time): the falling-snow animation only runs
+          // while the intro section is at least partly on screen - nothing
+          // to see, no reason to keep ~44 elements (22 flakes + their sway
+          // wrappers) animating off-screen.
+          setSnowfieldPlaying(entry.isIntersecting);
+
+          // Rule 2 (once ever): any drop below fully-visible means the
+          // section has started leaving. burstSnowPile/growSnowPile are
+          // themselves guarded by hasSnowDispersed, so this trigger firing
+          // repeatedly on later visits is harmless - only the first call
+          // that finds a non-empty pile actually does anything.
           if (entry.intersectionRatio < 1) burstSnowPile();
         });
       },
@@ -649,7 +687,9 @@
 
   function renderSnow() {
     const field = document.getElementById('snowfield');
-    const n = 30;
+    // Trimmed from 30 - fewer permanently-animating elements to composite
+    // on real mobile hardware, while still reading as a steady snowfall.
+    const n = 22;
     const color = '#E7EEF4';
     const seed = 51.7742;
     const sizeMin = 1.8, sizeMax = 5;
@@ -664,22 +704,33 @@
       const size = crystal
         ? sizeMax * 1.6 + r(1.3) * sizeMax * 2.4
         : sizeMin * 0.6 + r(1.3) * sizeMin;
+
+      // Outer element: position + fall/fade only (both transform/opacity,
+      // GPU-composited). Sway lives on the nested element below instead
+      // of animating this element's margin, which would force a reflow
+      // every frame.
       const flake = document.createElement('div');
       flake.className = 'snowflake';
       flake.style.left = (r(2.1) * 100) + '%';
       flake.style.width = size + 'px';
       flake.style.height = size + 'px';
-      flake.style.borderRadius = crystal ? '0' : '50%';
-      flake.style.background = crystal ? 'none' : color;
       flake.style.opacity = crystal ? 0.3 + r(3.7) * 0.55 : 0.25 + r(3.7) * 0.45;
       flake.style.setProperty('--om-fall', fall + 'px');
       const fallDur = ((crystal ? 13 : 9) + r(4.4) * 11) * SPEED_FACTOR;
       const fallDelay = -r(5.2) * 16;
       const swayDur = 3 + r(6.1) * 5;
       const fadeDur = 4 + r(7.3) * 5;
-      flake.style.animationDuration = `${fallDur}s, ${swayDur}s, ${fadeDur}s`;
-      flake.style.animationDelay = `${fallDelay}s, 0s, 0s`;
-      if (crystal) flake.appendChild(flakeSvg(color));
+      flake.style.animationDuration = `${fallDur}s, ${fadeDur}s`;
+      flake.style.animationDelay = `${fallDelay}s, 0s`;
+
+      const sway = document.createElement('div');
+      sway.className = 'snowflake-sway';
+      sway.style.borderRadius = crystal ? '0' : '50%';
+      sway.style.background = crystal ? 'none' : color;
+      sway.style.animationDuration = swayDur + 's';
+      if (crystal) sway.appendChild(flakeSvg(color));
+      flake.appendChild(sway);
+
       flake.addEventListener('animationiteration', (e) => {
         if (e.animationName === 'omFall') growSnowPile();
       });
@@ -699,5 +750,5 @@
   initLocationSketch();
   initKakaoMap();
   initKakaoMapButton();
-  initSnowPileBurst();
+  initIntroVisibilityObserver();
 })();
