@@ -441,90 +441,6 @@
     return svg;
   }
 
-  // ---------- intro-section snow pile ----------
-  // Grows a thin bar pinned to the bottom of the intro section every time a
-  // snowflake's fall animation loops back to the top ("lands"), as a rough
-  // stand-in for real accumulation physics. Capped, and resets on reload
-  // since nothing here is persisted.
-  const SNOW_PILE_MAX_PX = 44;
-  const SNOW_PILE_STEP_PX = 0.85;
-  let snowPileHeight = 0;
-
-  // The pile->burst effect only ever happens once per page load: after
-  // the first dispersal, both growing and bursting are permanently
-  // retired (guarded below), even though the intro section can still be
-  // scrolled in and out of view many more times. The base falling-snow
-  // animation is NOT gated by this flag - it now keeps falling across
-  // the whole page for as long as it's open (see initSnowTabPause for
-  // the one thing that does still pause it: the browser tab itself
-  // going into the background).
-  let hasSnowDispersed = false;
-
-  function growSnowPile() {
-    if (hasSnowDispersed) return;
-    if (snowPileHeight >= SNOW_PILE_MAX_PX) return;
-    snowPileHeight = Math.min(SNOW_PILE_MAX_PX, snowPileHeight + SNOW_PILE_STEP_PX);
-    const pile = document.getElementById('snowPile');
-    if (pile) pile.style.height = snowPileHeight + 'px';
-  }
-
-  // Scatters the current pile into a burst of small particles the moment
-  // the intro section starts scrolling out of view, then resets it to 0.
-  // Runs at most once (see hasSnowDispersed above) - it does not pile up
-  // and burst again on later visits to the intro section.
-  const SNOW_BURST_PARTICLES = 20;
-
-  function burstSnowPile() {
-    if (hasSnowDispersed) return;
-    const pile = document.getElementById('snowPile');
-    const intro = document.querySelector('.intro-section');
-    if (!pile || !intro || snowPileHeight <= 0) return;
-
-    // Set before spawning anything, not after: this is what makes the
-    // effect one-shot even if the observer fires again (e.g. more
-    // "ratio < 1" entries) while this burst is still mid-animation.
-    hasSnowDispersed = true;
-
-    const pileWidth = pile.getBoundingClientRect().width;
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < SNOW_BURST_PARTICLES; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'snow-burst-particle';
-      // Sized like the falling snowflakes themselves, not bigger - a
-      // burst of same-scale flakes reads as "scattered", oversized dots
-      // read as "confetti".
-      const size = 1.6 + Math.random() * 3;
-      // Mostly-sideways drift with only a faint upward lift, like a
-      // gust catching loose snow - no full-circle "explosion" vectors,
-      // and never drifting downward.
-      const dx = (Math.random() * 2 - 1) * 24;
-      const dy = -(3 + Math.random() * 12);
-      particle.style.left = (Math.random() * pileWidth) + 'px';
-      particle.style.width = size + 'px';
-      particle.style.height = size + 'px';
-      particle.style.setProperty('--burst-dx', dx + 'px');
-      particle.style.setProperty('--burst-dy', dy + 'px');
-      particle.style.animationDuration = (0.65 + Math.random() * 0.35) + 's';
-      particle.style.animationDelay = (Math.random() * 0.08) + 's';
-      frag.appendChild(particle);
-    }
-    intro.appendChild(frag);
-
-    // Collapse the bar itself quickly (overriding its normal slow-growth
-    // transition) while the particles fly, instead of leaving a flat
-    // block sitting there until the particles finish.
-    pile.style.transition = 'height .3s ease-in, opacity .3s ease-in';
-    pile.style.opacity = '0';
-    pile.style.height = '0px';
-    snowPileHeight = 0;
-
-    setTimeout(() => {
-      intro.querySelectorAll('.snow-burst-particle').forEach((el) => el.remove());
-      pile.style.transition = '';
-      pile.style.opacity = '';
-    }, 1150); // safely past the longest particle duration (~1s) + its delay
-  }
-
   // Pausing the CSS animations (rather than removing/re-adding the
   // flakes) means they resume exactly where they left off, with no
   // restart jump, and costs nothing while paused - no rAF loop, no
@@ -543,25 +459,6 @@
     document.addEventListener('visibilitychange', () => {
       setSnowfieldPlaying(!document.hidden);
     });
-  }
-
-  function initIntroVisibilityObserver() {
-    const intro = document.querySelector('.intro-section');
-    if (!intro || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // Any drop below fully-visible means the intro section has
-          // started leaving. burstSnowPile/growSnowPile are themselves
-          // guarded by hasSnowDispersed, so this trigger firing
-          // repeatedly on later visits is harmless - only the first
-          // call that finds a non-empty pile actually does anything.
-          if (entry.intersectionRatio < 1) burstSnowPile();
-        });
-      },
-      { threshold: [0, 0.25, 0.5, 0.75, 0.99, 1] }
-    );
-    observer.observe(intro);
   }
 
   function renderSnow() {
@@ -606,14 +503,19 @@
       flake.style.left = (r(2.1) * 100) + '%';
       flake.style.width = size + 'px';
       flake.style.height = size + 'px';
-      flake.style.opacity = crystal ? 0.3 + r(3.7) * 0.55 : 0.25 + r(3.7) * 0.45;
+      // Peak opacity while falling (omFade fades in/out around this) -
+      // each flake keeps its own brightness variance.
+      flake.style.setProperty('--flake-opacity', crystal ? 0.3 + r(3.7) * 0.55 : 0.25 + r(3.7) * 0.45);
       flake.style.setProperty('--om-fall', fall + 'px');
       const fallDur = ((crystal ? 13 : 9) + r(4.4) * 11) * SPEED_FACTOR;
       const fallDelay = -r(5.2) * 16;
       const swayDur = 3 + r(6.1) * 5;
-      const fadeDur = 4 + r(7.3) * 5;
-      flake.style.animationDuration = `${fallDur}s, ${fadeDur}s`;
-      flake.style.animationDelay = `${fallDelay}s, 0s`;
+      // omFade shares the exact same duration/delay as omFall so the
+      // fade-out is pinned to a fixed point in the fall's own distance
+      // (not an independent clock) - see the comment on the omFade
+      // keyframes for why that matters.
+      flake.style.animationDuration = `${fallDur}s, ${fallDur}s`;
+      flake.style.animationDelay = `${fallDelay}s, ${fallDelay}s`;
 
       const sway = document.createElement('div');
       sway.className = 'snowflake-sway';
@@ -623,9 +525,6 @@
       if (crystal) sway.appendChild(flakeSvg(color));
       flake.appendChild(sway);
 
-      flake.addEventListener('animationiteration', (e) => {
-        if (e.animationName === 'omFall') growSnowPile();
-      });
       frag.appendChild(flake);
     }
     field.appendChild(frag);
@@ -745,7 +644,6 @@
   initGalleryExpand();
   initLocationSketch();
   initKakaoMap();
-  initIntroVisibilityObserver();
   initSnowTabPause();
   initScrollReveal();
   initIntroReveal();

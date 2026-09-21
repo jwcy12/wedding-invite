@@ -28,7 +28,6 @@
 
   --sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --snow: #E7EEF4;
   /* Dusty rose point color - the one spot of color against the
      otherwise monochrome ivory-on-black palette (countdown D-day
      number, heart accent). */
@@ -187,9 +186,18 @@ button {
   0%, 100% { transform: translateX(-10px); }
   50%      { transform: translateX(10px); }
 }
+/* Synced 1:1 with omFall (same duration/delay) rather than its own
+   independent cycle: fades in just after the loop restarts, holds at
+   the flake's own peak brightness, then fades out before the fall
+   distance is fully covered - so a flake is already invisible by the
+   time it reaches the bottom edge and loops back to the top, instead of
+   visibly popping between the two positions. */
 @keyframes omFade {
-  0%, 100% { opacity: .25; }
-  50%      { opacity: .9; }
+  0%   { opacity: 0; }
+  8%   { opacity: var(--flake-opacity, .6); }
+  60%  { opacity: var(--flake-opacity, .6); }
+  95%  { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 /* ---------- content ---------- */
@@ -213,58 +221,6 @@ button {
   flex-direction: column;
   justify-content: center;
   gap: 32px;
-}
-
-/* Snow piling up at the foot of the intro screen only; grown gradually by
-   script.js and capped, never spilling into the sections below. */
-.snow-pile {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 0;
-  max-height: 44px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(231, 238, 244, .55) 0%, rgba(231, 238, 244, .88) 45%, #F4F7FA 100%);
-  box-shadow: 0 -4px 14px rgba(31, 42, 51, .15);
-  clip-path: polygon(
-    0% 9px, 6% 3px, 12% 7px, 18% 2px, 24% 6px, 30% 1px, 36% 5px, 42% 8px,
-    48% 3px, 54% 6px, 60% 2px, 66% 7px, 72% 4px, 78% 8px, 84% 3px, 90% 6px,
-    96% 2px, 100% 8px, 100% 100%, 0% 100%
-  );
-  transition: height 1.4s ease-out;
-}
-
-/* Burst particles: spawned in JS right as the intro section starts
-   scrolling out of view, scattering the pile instead of letting it just
-   vanish. Anchored the same way the pile is (bottom of intro-section). */
-.snow-burst-particle {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  border-radius: 50%;
-  background: var(--snow);
-  box-shadow: 0 0 2px rgba(31, 42, 51, .25);
-  pointer-events: none;
-  z-index: 2;
-  animation-name: snowBurst;
-  /* Plain decelerating ease-out - no bounce/elastic overshoot, so the
-     particles settle into their drift rather than springing off it. */
-  animation-timing-function: ease-out;
-  animation-fill-mode: forwards;
-}
-@keyframes snowBurst {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  60% {
-    opacity: .5;
-  }
-  100% {
-    transform: translate(var(--burst-dx), var(--burst-dy)) scale(.7);
-    opacity: 0;
-  }
 }
 
 .eyebrow {
