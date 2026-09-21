@@ -19,7 +19,7 @@
   const contacts = [
     { rel: '신랑', name: '이창용', phone: '010-5194-1629' },
     { rel: '신랑 아버지', name: '이채민', phone: '010-2698-1629' },
-    { rel: '신랑 어머니', name: '정규택', phone: '010-5193-1629' },
+    { rel: '신랑 어머니', name: '정순애', phone: '010-5193-1629' },
     { rel: '신부', name: '백지원', phone: '010-2379-4112' },
     { rel: '신부 아버지', name: '백승진', phone: '010-3742-9334' },
     { rel: '신부 어머니', name: '전태자', phone: '010-8885-4112' }
@@ -43,7 +43,10 @@
     },
     {
       title: '주차안내',
-      lines: ['건물 지하 2~4층, 2시간 무료']
+      lines: [
+        '건물 내 (지하1층 ~ 지하3층)',
+        '옥외주차장 및 지하철 환승 주차장 이용 (1시간 30분 무료)'
+      ]
     }
   ];
 
@@ -71,75 +74,9 @@
     grid.append(...cells);
   }
 
-  // Ring geometry shared by all four countdown dials.
-  const CD_RING_R = 30;
-  const CD_RING_CIRC = 2 * Math.PI * CD_RING_R;
-  // The DAYS ring has no natural cycle length like hours/minutes/seconds
-  // do, so its "full" reference is the total day-count captured once at
-  // load time - the ring then reads as "how much of the whole wait is
-  // left," slowly draining to empty as the date approaches.
-  let cdDaysTotal = 1;
-
   function renderCountdown() {
-    const el = document.getElementById('countdown');
-    const units = [
-      { key: 'DAYS', id: 'cd-days' },
-      { key: 'HRS', id: 'cd-hrs' },
-      { key: 'MIN', id: 'cd-min' },
-      { key: 'SEC', id: 'cd-sec' }
-    ];
-    units.forEach((u) => {
-      const unit = document.createElement('div');
-      unit.className = 'cd-unit';
-
-      const ringWrap = document.createElement('div');
-      ringWrap.className = 'cd-ring-wrap';
-
-      const svg = document.createElementNS(SVG_NS, 'svg');
-      svg.setAttribute('class', 'cd-ring');
-      svg.setAttribute('viewBox', '0 0 72 72');
-
-      const track = document.createElementNS(SVG_NS, 'circle');
-      track.setAttribute('class', 'cd-ring-track');
-      track.setAttribute('cx', '36');
-      track.setAttribute('cy', '36');
-      track.setAttribute('r', String(CD_RING_R));
-
-      const progress = document.createElementNS(SVG_NS, 'circle');
-      progress.setAttribute('class', 'cd-ring-progress');
-      progress.setAttribute('cx', '36');
-      progress.setAttribute('cy', '36');
-      progress.setAttribute('r', String(CD_RING_R));
-      progress.setAttribute('id', `${u.id}-ring`);
-      progress.style.strokeDasharray = String(CD_RING_CIRC);
-      progress.style.strokeDashoffset = '0';
-
-      svg.append(track, progress);
-
-      const val = document.createElement('div');
-      val.className = 'cd-val';
-      val.id = u.id;
-
-      ringWrap.append(svg, val);
-
-      const key = document.createElement('div');
-      key.className = 'cd-key';
-      key.textContent = u.key;
-
-      unit.append(ringWrap, key);
-      el.appendChild(unit);
-    });
-
-    cdDaysTotal = Math.max(1, Math.ceil((WEDDING_DATE - Date.now()) / 86400000));
     tickCountdown();
     setInterval(tickCountdown, 1000);
-  }
-
-  function setRing(id, fraction) {
-    const ring = document.getElementById(`${id}-ring`);
-    if (!ring) return;
-    const clamped = Math.max(0, Math.min(1, fraction));
-    ring.style.strokeDashoffset = String(CD_RING_CIRC * (1 - clamped));
   }
 
   function tickCountdown() {
@@ -152,10 +89,7 @@
     document.getElementById('cd-hrs').textContent = pad(hh);
     document.getElementById('cd-min').textContent = pad(mm);
     document.getElementById('cd-sec').textContent = pad(ss);
-    setRing('cd-days', dd / cdDaysTotal);
-    setRing('cd-hrs', hh / 24);
-    setRing('cd-min', mm / 60);
-    setRing('cd-sec', ss / 60);
+    document.getElementById('countdownDday').textContent = String(dd);
   }
 
   // webp first (the optimized files actually in assets/) - jpg/jpeg/png
@@ -178,7 +112,10 @@
 
       const img = document.createElement('img');
       img.alt = `갤러리 사진 ${label}`;
-      img.loading = 'lazy';
+      // Not lazy: photo 01 needs to be ready to auto-open into the
+      // expand panel right away on page load (see the load listener
+      // below), and the rest are tiny optimized files anyway - loading
+      // all 9 eagerly costs little and keeps prev/next usable early.
       let extIndex = 0;
       img.addEventListener('error', () => {
         extIndex += 1;
@@ -188,12 +125,20 @@
           img.remove();
         }
       });
-      img.addEventListener('load', () => tile.classList.add('has-image'));
+      img.addEventListener('load', () => {
+        tile.classList.add('has-image');
+        // Default state: the first photo is shown expanded from the
+        // moment its image is ready, with no click required.
+        if (label === galleryLabels[0] && !hasAutoOpenedGallery) {
+          hasAutoOpenedGallery = true;
+          showGalleryTile(tile, { scroll: false });
+        }
+      });
       img.src = `assets/gallery-${label}.${GALLERY_EXTS[extIndex]}`;
       tile.appendChild(img);
 
       tile.addEventListener('click', () => {
-        if (tile.classList.contains('has-image')) openLightbox(tile);
+        if (tile.classList.contains('has-image')) showGalleryTile(tile);
       });
 
       grid.appendChild(tile);
@@ -290,142 +235,83 @@
     });
   }
 
-  // ---------- gallery lightbox ----------
-  // Shared-element open/close morph uses the View Transitions API when
-  // available: the same view-transition-name is handed off between the
-  // clicked grid thumbnail and the fullscreen lightbox image, so the
-  // browser interpolates position/size between them automatically. On
-  // browsers without support, startViewTransition is simply absent and
-  // the DOM mutation just runs immediately - open/close still work,
-  // there's just no morph.
-  const GALLERY_VT_NAME = 'gallery-active';
-  let lightboxTiles = [];
-  let lightboxIndex = -1;
+  // ---------- gallery expand (in-page, below the grid) ----------
+  // A panel permanently pinned right under the gallery grid (not a
+  // fullscreen overlay, and never closed) - it shows photo 01 by
+  // default and swaps to whichever tile is tapped. Prev/next (always
+  // visible) cycle through all 9 photos, wrapping in either direction.
+  // The currently-shown tile is tracked by identity, and the loaded-tile
+  // list is re-queried fresh on every prev/next rather than cached, so
+  // navigation still lands on the right photo even if it's used before
+  // every one of the 9 images has finished loading in.
+  let currentGalleryTile = null;
+  let hasAutoOpenedGallery = false;
 
-  function withViewTransition(mutate) {
-    if (typeof document.startViewTransition === 'function') {
-      const transition = document.startViewTransition(mutate);
-      // The transition can reject (e.g. it gets interrupted by another
-      // one starting) independent of whether the DOM mutation itself
-      // succeeded - swallow that so it doesn't surface as an unhandled
-      // rejection; there's nothing more to do about it either way.
-      transition.ready.catch(() => {});
-      transition.finished.catch(() => {});
-    } else {
-      mutate();
+  function showGalleryTile(tile, { scroll = true } = {}) {
+    const expand = document.getElementById('galleryExpand');
+    const expandImg = document.getElementById('galleryExpandImg');
+    const gridImg = tile.querySelector('img');
+    if (!expand || !expandImg || !gridImg) return;
+
+    currentGalleryTile = tile;
+    expandImg.src = gridImg.src;
+    expandImg.alt = gridImg.alt;
+    updateGalleryActiveTile();
+
+    // The default auto-open on page load must not yank the page down to
+    // the gallery section - only a user-initiated tile click scrolls.
+    if (scroll) {
+      expand.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
 
-  function updateLightboxNavVisibility() {
-    const prevBtn = document.getElementById('lightboxPrev');
-    const nextBtn = document.getElementById('lightboxNext');
-    const multiple = lightboxTiles.length > 1;
-    if (prevBtn) prevBtn.hidden = !multiple;
-    if (nextBtn) nextBtn.hidden = !multiple;
+  function updateGalleryActiveTile() {
+    document.querySelectorAll('.gallery-tile.is-active').forEach((t) => t.classList.remove('is-active'));
+    if (currentGalleryTile) currentGalleryTile.classList.add('is-active');
   }
 
-  function openLightbox(tile) {
+  function showGalleryPhoto(step) {
     const tiles = Array.from(document.querySelectorAll('.gallery-tile.has-image'));
-    const idx = tiles.indexOf(tile);
-    if (idx === -1) return;
-    lightboxTiles = tiles;
-    lightboxIndex = idx;
-
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
+    if (tiles.length === 0) return;
+    const curIdx = tiles.indexOf(currentGalleryTile);
+    const baseIdx = curIdx === -1 ? 0 : curIdx;
+    const nextIdx = ((baseIdx + step) % tiles.length + tiles.length) % tiles.length; // circular wrap
+    const tile = tiles[nextIdx];
     const gridImg = tile.querySelector('img');
-    if (!gridImg) return;
+    const expandImg = document.getElementById('galleryExpandImg');
 
-    // The grid thumbnail "owns" the shared name right up to the moment
-    // the transition captures the old state.
-    gridImg.style.viewTransitionName = GALLERY_VT_NAME;
-
-    withViewTransition(async () => {
-      // Hand the name off to the lightbox image for the new state, so
-      // exactly one element claims it in each snapshot phase.
-      gridImg.style.viewTransitionName = '';
-      lightboxImg.style.viewTransitionName = GALLERY_VT_NAME;
-      lightboxImg.src = gridImg.src;
-      lightboxImg.alt = gridImg.alt;
-      lightbox.hidden = false;
-      updateLightboxNavVisibility();
-      // The new state is snapshotted on the next frame after this
-      // callback settles - without waiting for the freshly-assigned src
-      // to actually decode, that snapshot can catch the image at 0x0
-      // and the transition fails to capture it.
-      try { await lightboxImg.decode(); } catch (err) { /* no-op */ }
-    });
-  }
-
-  function closeLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    if (lightbox.hidden) return;
-    const lightboxImg = document.getElementById('lightboxImg');
-    const tile = lightboxTiles[lightboxIndex];
-    const gridImg = tile ? tile.querySelector('img') : null;
-
-    withViewTransition(async () => {
-      lightboxImg.style.viewTransitionName = '';
-      if (gridImg) {
-        gridImg.style.viewTransitionName = GALLERY_VT_NAME;
-        try { await gridImg.decode(); } catch (err) { /* no-op */ }
-      }
-      lightbox.hidden = true;
-      lightboxImg.src = '';
-    });
-
-    lightboxTiles = [];
-    lightboxIndex = -1;
-  }
-
-  // Prev/next deliberately skip the shared-element morph (it should
-  // only happen once, on open/close) - just a quick opacity crossfade
-  // of the image content while it stays fullscreen in place.
-  function showLightboxPhoto(step) {
-    const n = lightboxTiles.length;
-    if (n === 0) return;
-    lightboxIndex = ((lightboxIndex + step) % n + n) % n; // circular wrap
-    const tile = lightboxTiles[lightboxIndex];
-    const gridImg = tile.querySelector('img');
-    const lightboxImg = document.getElementById('lightboxImg');
-
-    lightboxImg.classList.add('is-switching');
+    currentGalleryTile = tile;
+    updateGalleryActiveTile();
+    expandImg.classList.add('is-switching');
     setTimeout(() => {
-      lightboxImg.src = gridImg.src;
-      lightboxImg.alt = gridImg.alt;
-      requestAnimationFrame(() => lightboxImg.classList.remove('is-switching'));
+      expandImg.src = gridImg.src;
+      expandImg.alt = gridImg.alt;
+      requestAnimationFrame(() => expandImg.classList.remove('is-switching'));
     }, 160);
   }
 
-  function initLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    const closeBtn = document.getElementById('lightboxClose');
-    const prevBtn = document.getElementById('lightboxPrev');
-    const nextBtn = document.getElementById('lightboxNext');
+  function initGalleryExpand() {
+    const expand = document.getElementById('galleryExpand');
+    const prevBtn = document.getElementById('galleryExpandPrev');
+    const nextBtn = document.getElementById('galleryExpandNext');
+    if (!expand || !prevBtn || !nextBtn) return;
 
-    closeBtn.addEventListener('click', closeLightbox);
-    prevBtn.addEventListener('click', () => showLightboxPhoto(-1));
-    nextBtn.addEventListener('click', () => showLightboxPhoto(1));
-
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) closeLightbox();
-    });
+    prevBtn.addEventListener('click', () => showGalleryPhoto(-1));
+    nextBtn.addEventListener('click', () => showGalleryPhoto(1));
 
     document.addEventListener('keydown', (e) => {
-      if (lightbox.hidden) return;
-      if (e.key === 'Escape') closeLightbox();
-      else if (e.key === 'ArrowRight') showLightboxPhoto(1);
-      else if (e.key === 'ArrowLeft') showLightboxPhoto(-1);
+      if (e.key === 'ArrowRight') showGalleryPhoto(1);
+      else if (e.key === 'ArrowLeft') showGalleryPhoto(-1);
     });
 
     // Touch swipe, for the mobile frame.
     let touchStartX = null;
     let touchStartY = null;
-    lightbox.addEventListener('touchstart', (e) => {
+    expand.addEventListener('touchstart', (e) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     }, { passive: true });
-    lightbox.addEventListener('touchend', (e) => {
+    expand.addEventListener('touchend', (e) => {
       if (touchStartX === null) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = e.changedTouches[0].clientY - touchStartY;
@@ -435,8 +321,8 @@
       // Ignore mostly-vertical drags so a scroll attempt doesn't get
       // mistaken for a swipe.
       if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
-      if (dx < 0) showLightboxPhoto(1);
-      else showLightboxPhoto(-1);
+      if (dx < 0) showGalleryPhoto(1);
+      else showGalleryPhoto(-1);
     });
   }
 
@@ -475,17 +361,6 @@
     if (window.ResizeObserver) {
       new ResizeObserver(rescale).observe(wrap);
     }
-  }
-
-  function initKakaoMapButton() {
-    const btn = document.getElementById('kakaoMapBtn');
-    const target = document.getElementById('mapEmbed');
-    if (!btn || !target) return;
-    btn.addEventListener('click', () => {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      target.classList.add('map-embed--highlight');
-      setTimeout(() => target.classList.remove('map-embed--highlight'), 1200);
-    });
   }
 
   // ---------- clipboard copy + toast ----------
@@ -739,6 +614,26 @@
     field.appendChild(frag);
   }
 
+  // ---------- pinch/double-tap zoom guard ----------
+  // The viewport meta's maximum-scale=1/user-scalable=no blocks pinch
+  // zoom, but iOS Safari has long ignored that for double-tap zoom
+  // specifically. The standard workaround: if a touchend fires within
+  // 300ms of the previous one, treat it as a double-tap and cancel its
+  // default action before Safari can turn it into a zoom. This doesn't
+  // stopPropagation, so it never interferes with other touch handlers
+  // (e.g. the gallery-expand swipe listeners) - it only cancels the
+  // browser's own zoom/synthetic-click behavior for that touch.
+  function initDoubleTapZoomGuard() {
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  }
+
   renderCalendar();
   renderCountdown();
   renderGallery();
@@ -746,9 +641,9 @@
   renderContacts();
   renderTransitAccordion();
   renderSnow();
-  initLightbox();
+  initGalleryExpand();
   initLocationSketch();
   initKakaoMap();
-  initKakaoMapButton();
   initIntroVisibilityObserver();
+  initDoubleTapZoomGuard();
 })();

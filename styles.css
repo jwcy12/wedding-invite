@@ -1,39 +1,40 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* Light "paper" theme tokens. Every text/border/fill color below the
+  /* Dark "midnight" theme tokens. Every text/border/fill color below the
      :root block references one of these so contrast stays consistent
      and easy to re-check in one place. Values are picked to clear
-     WCAG AA (>=4.5:1) against both the flat page background color
-     (--paper-bg) and the lighter highlight areas the grain texture adds
-     on top of it. */
-  --ink: #1F2A33;         /* primary text: names, time, values, amounts */
-  --ink-soft: #2E3A43;    /* secondary text: labels, captions, body copy */
-  --hairline: rgba(31, 42, 51, .16);   /* thin dividers between rows */
-  --hairline-soft: rgba(31, 42, 51, .10);
+     WCAG AA (>=4.5:1) against the flat black page background
+     (--paper-bg). */
+  --ink: #F4F2ED;         /* primary text: names, time, values, amounts */
+  --ink-soft: rgba(244, 242, 237, .72);    /* secondary text: labels, captions, body copy */
+  --hairline: rgba(244, 242, 237, .16);   /* thin dividers between rows */
+  --hairline-soft: rgba(244, 242, 237, .10);
 
   /* Minimal "Toss/Apple" surface system: cards are near-invisible tonal
-     fills (barely darker/whiter than the page) separated by soft
-     diffused shadow instead of a hard outline. */
-  --card-bg: rgba(255, 255, 255, .34);
-  --card-bg-soft: rgba(255, 255, 255, .22);
-  --shadow-card: 0 1px 2px rgba(20, 28, 36, .05), 0 10px 28px rgba(20, 28, 36, .09);
-  --shadow-card-sm: 0 1px 2px rgba(20, 28, 36, .05), 0 4px 14px rgba(20, 28, 36, .07);
+     fills (barely lighter than the page) separated by soft diffused
+     shadow instead of a hard outline. */
+  --card-bg: rgba(255, 255, 255, .06);
+  --card-bg-soft: rgba(255, 255, 255, .04);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .45);
+  --shadow-card-sm: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .35);
   --radius-lg: 18px;
   --radius-md: 12px;
   --radius-pill: 999px;
 
-  --fill-btn: rgba(31, 42, 51, .07);
-  --fill-btn-hover: rgba(31, 42, 51, .13);
-  --hover-bg: rgba(31, 42, 51, .06);
+  --fill-btn: rgba(244, 242, 237, .08);
+  --fill-btn-hover: rgba(244, 242, 237, .14);
+  --hover-bg: rgba(244, 242, 237, .06);
 
   --sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --snow: #E7EEF4;
-  /* Flat base tone behind the SVG grain texture (not just a load
-     fallback - the texture is alpha-only noise, so this color always
-     shows through it everywhere, not just before it loads). */
-  --paper-bg: #99AABA;
+  /* Dusty rose point color - the one spot of color against the
+     otherwise monochrome ivory-on-black palette (countdown D-day
+     number, heart accent). */
+  --accent: #C96B6B;
+  /* Flat black base tone for the page background. */
+  --paper-bg: #0A0A0A;
 
   /* backdrop-filter is one of the heaviest things a mobile GPU can be
      asked to do, especially re-sampled behind the constantly-animating
@@ -64,16 +65,6 @@ button {
   max-width: 430px;
   margin: 0 auto;
   background-color: var(--paper-bg);
-  /* paper-texture.svg is a procedural feTurbulence grain (alpha-only,
-     over transparent) rather than a raster photo, so it rasterizes at
-     whatever resolution the browser actually needs - no more
-     DPR-dependent upscaling/blotchiness from a fixed-size source image,
-     and no tiling seams to manage either. */
-  /* background-image: url('assets/paper-texture.svg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-attachment: fixed; */
   color: var(--ink-soft);
   overflow: hidden;
   min-height: 100vh;
@@ -92,12 +83,12 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #4C6072;
+    background: #242424;
   }
 
   .invite {
     width: 430px;
-    height: min(932px, 98vh);
+    height: min(800px, 98vh);
     min-height: 0;
     flex: none;
     border: 1px solid rgba(255, 255, 255, .45);
@@ -291,7 +282,7 @@ button {
   color: var(--ink-soft);
 }
 
-.block-greeting { padding: 100px 24px 0; }
+.block-greeting { padding: 0px 24px 0; }
 .greeting {
   font-size: 13px;
   font-weight: 300;
@@ -300,7 +291,7 @@ button {
   color: var(--ink-soft);
 }
 .hosts {
-  margin-top: 34px;
+  margin-top: 64px;
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
@@ -321,7 +312,7 @@ button {
   color: var(--ink);
 }
 
-.block-datetime { padding: 100px 30px 0; }
+.block-datetime { padding: 48px 30px 0; }
 .date-mono {
   font-family: 'Spline Sans Mono', monospace;
   font-size: 11px;
@@ -361,7 +352,7 @@ button {
   color: var(--ink-soft);
 }
 .cal-weekdays {
-  margin-top: 18px;
+  margin-top: 40px;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   font-family: 'Spline Sans Mono', monospace;
@@ -376,7 +367,7 @@ button {
   gap: 3px 0;
 }
 .cal-cell {
-  height: 30px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -394,88 +385,72 @@ button {
   color: var(--ink);
 }
 .cal-cell.sun span { color: var(--ink-soft); }
-.cal-cell.marked span { background: var(--ink); color: #FFFFFF; }
+.cal-cell.marked span { background: var(--ink); color: #0A0A0A; }
 .cal-cell.empty span { color: transparent; }
 
 .countdown {
-  margin-top: 26px;
+  margin-top: 30px;
+}
+.countdown-rule {
+  height: 1px;
+  background: var(--hairline);
+}
+.countdown-labels {
+  margin-top: 18px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  font-family: 'Spline Sans Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .16em;
   text-align: center;
+  color: var(--ink-soft);
 }
-.cd-unit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.cd-ring-wrap {
-  position: relative;
-  width: 68px;
-  height: 68px;
-}
-.cd-ring {
-  width: 100%;
-  height: 100%;
-  /* Start the progress arc at 12 o'clock instead of SVG's default 3
-     o'clock. The remaining arc stays pinned to 12 and its far edge
-     recedes back toward 12 as the unit's value shrinks - i.e. it
-     empties counter-clockwise. */
-  transform: rotate(-90deg);
-}
-.cd-ring-track {
-  fill: none;
-  stroke: var(--hairline-soft);
-  stroke-width: 2;
-}
-/* stroke-dashoffset isn't composited the way transform/opacity are, but
-   a transform: rotate()-based ring (two rotating half-circle wedges,
-   clipped) would mean real added complexity for four 68px circles that
-   update once a second at most - not a meaningful win here. will-change
-   at least lets the browser isolate this into its own paint layer
-   up front instead of promoting/demoting it on every tick. */
-.cd-ring-progress {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1s linear;
-  will-change: stroke-dashoffset;
-}
-/* DAYS/HRS/MIN update rarely enough that a 1s glide always finishes
-   well before their next tick, settling exactly on the correct value.
-   SEC updates every 1000ms - the same length as the transition - so it
-   never finishes gliding before being retargeted again and visibly
-   lags behind its true value; a shorter transition lets it fully
-   settle each second like the others do. */
-#cd-sec-ring {
-  transition-duration: .3s;
-}
-.cd-val {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Same 4-column grid as .countdown-labels (not flex) so each number's
+   column exactly matches its label's column above - a colon sitting
+   between two flex items would otherwise eat into that shared width
+   and throw the centers out of alignment. The colons themselves are
+   absolute-positioned ::before content anchored to the following
+   number's column edge, so they add visual separation without
+   occupying grid track space or shifting any column's center. */
+.countdown-values {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  text-align: center;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
-  /* Flex centers the line box, not the glyph itself - a font's internal
-     leading (ascent/descent above and below the actual numerals) can
-     push that line box's visual center off from the box's geometric
-     center. line-height: 1 tightens the box down to the glyph's own
-     metrics; measured pixel-for-pixel against the ring's center, that
-     alone lands Cormorant Garamond's digits exactly on-center, so no
-     extra transform nudge is needed (one only would have reintroduced
-     a fresh offset). */
-  line-height: 1;
+  font-size: 34px;
+  letter-spacing: .02em;
   color: var(--ink);
 }
-.cd-key {
-  margin-top: 8px;
-  font-family: 'Spline Sans Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .12em;
+.countdown-values span[id] {
+  position: relative;
+  font-variant-numeric: tabular-nums;
+}
+.countdown-values span[id]:not(#cd-days)::before {
+  content: ':';
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 22px;
   color: var(--ink-soft);
+}
+
+.countdown-message {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+.countdown-heart {
+  margin: 0 1px;
+  color: var(--accent);
+}
+.countdown-dday {
+  font-weight: 500;
+  color: var(--accent);
 }
 
 .section-title {
@@ -499,10 +474,10 @@ button {
   border: 0;
   margin: 0;
   padding: 0;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   overflow: hidden;
   background-color: var(--card-bg-soft);
-  background-image: repeating-linear-gradient(135deg, rgba(31, 42, 51, .05) 0 5px, rgba(31, 42, 51, .1) 5px 10px);
+  background-image: repeating-linear-gradient(135deg, rgba(244, 242, 237, .05) 0 5px, rgba(244, 242, 237, .1) 5px 10px);
   box-shadow: var(--shadow-card-sm);
   /* No backdrop-filter here on purpose: up to 9 of these exist on
      screen at once, and once a photo loads it fully covers the tile
@@ -539,7 +514,60 @@ button {
   display: none;
 }
 
-.block-location { padding: 100px 24px 0; }
+.gallery-tile.is-active {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* ---------- gallery expand (in-page, below the grid) ---------- */
+/* Replaces the old fullscreen lightbox: the tapped photo enlarges into
+   this panel right under the grid instead of covering the screen. It's
+   permanently pinned there (photo 01 by default, before any tap) with
+   its prev/next arrows always visible - there's no open/closed state. */
+.gallery-expand {
+  margin-top: 14px;
+}
+.gallery-expand-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: var(--card-bg-soft);
+  box-shadow: var(--shadow-card);
+}
+.gallery-expand-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity .18s ease;
+}
+.gallery-expand-img.is-switching { opacity: 0; }
+
+.gallery-expand-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 50%;
+  background: rgba(10, 10, 10, .7);
+  color: #F2F2F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  appearance: none;
+  z-index: 1;
+  transition: background .15s ease;
+}
+.gallery-expand-nav:hover { background: rgba(30, 30, 30, .8); }
+.gallery-expand-nav svg { display: block; }
+.gallery-expand-prev { left: -16px; }
+.gallery-expand-next { right: -16px; }
+
+.block-location { padding: 150px 24px 0; }
 .map-embed {
   position: relative;
   margin-top: 20px;
@@ -551,10 +579,6 @@ button {
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(var(--card-blur));
   -webkit-backdrop-filter: blur(var(--card-blur));
-  transition: box-shadow .3s ease;
-}
-.map-embed--highlight {
-  box-shadow: 0 0 0 3px rgba(31, 42, 51, .18), var(--shadow-card);
 }
 /* Kakao's roughmap embed is a fixed 640x360px widget; script.js scales
    this wrapper down with a CSS transform so it fits the 430px frame
@@ -582,7 +606,7 @@ button {
   text-align: center;
 }
 .map-buttons {
-  margin-top: 10px;
+  margin-top: 24px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -595,7 +619,7 @@ button {
   color: var(--ink-soft);
 }
 .transit-accordion {
-  margin-top: 12px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -767,99 +791,6 @@ button {
   font-style: italic;
   font-size: 18px;
   color: var(--ink-soft);
-}
-
-/* ---------- gallery lightbox ---------- */
-/* Kept as a dark viewer regardless of site theme - a neutral dark
-   backdrop is what makes photos themselves read best, independent of
-   the page's light paper mood. */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 28px;
-  background: rgba(0, 0, 0, .88);
-}
-.lightbox[hidden] { display: none; }
-.lightbox-img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, .5);
-}
-.lightbox-close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, .3);
-  border-radius: 50%;
-  background: rgba(10, 10, 10, .7);
-  color: #F2F2F0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  appearance: none;
-  z-index: 1;
-}
-/* The X/chevrons used to be text glyphs (&times;, &#8249; etc.) - those
-   sit off-center by a few px in most fonts because their glyph box
-   doesn't match their visual ink, even with line-height: 1. Inline SVG
-   icons with a symmetric viewBox don't have that ambiguity, so flex
-   centering lands them exactly on-center; display: block just avoids
-   the small baseline gap inline SVGs can pick up as flex items. */
-.lightbox-close svg,
-.lightbox-nav svg {
-  display: block;
-}
-
-.lightbox-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(255, 255, 255, .3);
-  border-radius: 50%;
-  background: rgba(10, 10, 10, .7);
-  color: #F2F2F0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  appearance: none;
-  z-index: 1;
-  transition: background .15s ease;
-}
-.lightbox-nav:hover { background: rgba(30, 30, 30, .8); }
-.lightbox-nav[hidden] { display: none; }
-.lightbox-prev { left: 10px; }
-.lightbox-next { right: 10px; }
-
-/* Prev/next swap the image content with a quick crossfade instead of
-   repeating the open/close shared-element morph. */
-.lightbox-img {
-  transition: opacity .18s ease;
-}
-.lightbox-img.is-switching {
-  opacity: 0;
-}
-
-/* Shared-element open/close morph (View Transitions API). Browsers
-   without support simply never create these pseudo-elements, so this
-   block is a no-op there - the DOM still updates instantly. */
-::view-transition-group(gallery-active) {
-  /* Trimmed from .42s: the open/close morph is a one-off cost (one root
-     snapshot pair + one named-group snapshot pair, not per-frame work),
-     but a shorter window still means less time spent compositing it on
-     slower hardware. */
-  animation-duration: .32s;
-  animation-timing-function: cubic-bezier(.2, .7, .2, 1);
 }
 
 /* ---------- toast ---------- */

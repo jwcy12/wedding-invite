@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>이창용 &amp; 백지원 결혼합니다</title>
 <meta name="description" content="2026년 12월 12일 토요일 오후 3시 20분, KDW웨딩 3층 블랙스톤홀">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
       </section>
 
       <section class="block block-photo">
-        <img src="assets/lace-photo-2.webp" alt="레이스 프레임 커플 사진" class="lace-photo">
+        <img src="assets/lace-photo-5.webp" alt="레이스 프레임 커플 사진" class="lace-photo">
       </section>
 
       <section class="block block-names">
@@ -69,13 +69,36 @@
           <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
         </div>
         <div class="cal-grid" id="calGrid"></div>
-        <div class="countdown" id="countdown"></div>
+        <div class="countdown">
+          <div class="countdown-rule"></div>
+          <div class="countdown-labels">
+            <span>Day</span>
+            <span>Hour</span>
+            <span>Min</span>
+            <span>Sec</span>
+          </div>
+          <div class="countdown-values">
+            <span id="cd-days">00</span><span id="cd-hrs">00</span><span id="cd-min">00</span><span id="cd-sec">00</span>
+          </div>
+        </div>
+        <div class="countdown-message">이창용 <span class="countdown-heart" aria-hidden="true">&#9829;</span> 백지원의 결혼식이 <span class="countdown-dday" id="countdownDday">0</span>일 남았습니다.</div>
       </div>
     </section>
 
     <section class="block block-gallery">
       <div class="section-title">GALLERY</div>
       <div class="gallery-grid" id="galleryGrid"></div>
+      <div class="gallery-expand" id="galleryExpand">
+        <div class="gallery-expand-frame">
+          <button type="button" class="gallery-expand-nav gallery-expand-prev" id="galleryExpandPrev" aria-label="이전 사진">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+          </button>
+          <img src="" alt="" class="gallery-expand-img" id="galleryExpandImg">
+          <button type="button" class="gallery-expand-nav gallery-expand-next" id="galleryExpandNext" aria-label="다음 사진">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+          </button>
+        </div>
+      </div>
     </section>
 
     <section class="block block-location">
@@ -94,11 +117,10 @@
         }).render();
       </script>
       <div class="map-buttons">
-        <a class="map-btn pill-btn" href="https://naver.me/FPn5kMTA" target="_blank" rel="noopener noreferrer">네이버</a>
-        <button type="button" class="map-btn pill-btn" id="kakaoMapBtn">카카오</button>
-        <a class="map-btn pill-btn" href="https://tmap.life/11979c6b" target="_blank" rel="noopener noreferrer">티맵</a>
+        <a class="map-btn pill-btn" href="https://naver.me/x4leUzY3" target="_blank" rel="noopener noreferrer">네이버</a>
+        <a class="map-btn pill-btn" href="https://kko.to/B_CvBH1pik" target="_blank" rel="noopener noreferrer">카카오</a>
+        <a class="map-btn pill-btn" href="https://tmap.life/e200e1d9" target="_blank" rel="noopener noreferrer">티맵</a>
       </div>
-      <div class="location-text">지하철 &middot; 5호선 강동역 3번 출구 도보 4분<br>주차 &middot; 건물 지하 2~4층, 2시간 무료</div>
       <div class="transit-accordion" id="transitAccordion"></div>
     </section>
 
@@ -119,18 +141,6 @@
 
   </div>
 
-  <div class="lightbox" id="lightbox" hidden>
-    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>
-    </button>
-    <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="이전 사진">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
-    </button>
-    <img src="" alt="" class="lightbox-img" id="lightboxImg">
-    <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="다음 사진">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-    </button>
-  </div>
 </main>
 
 <script src="script.js"></script>
