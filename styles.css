@@ -94,21 +94,41 @@ button {
     border: 1px solid rgba(255, 255, 255, .45);
     border-radius: 28px;
     box-shadow: 0 22px 60px rgba(15, 22, 28, .45);
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    /* .invite is its own scroll container here (body no longer scrolls),
-       so "fixed" must mean fixed to THIS box, not the browser viewport -
-       background-attachment: fixed would anchor to the viewport instead
-       and look detached from the small framed mockup. scroll (the
-       default) ties the image to the element's own box. */
-    background-attachment: scroll;
+    /* .invite itself does NOT scroll here (see .content in the second
+       desktop media query below, which is the actual scroll container)
+       - it only clips to the rounded frame via the base rule's
+       overflow: hidden. This split matters for .snowfield: .snowfield
+       is a child of .invite but a SIBLING of .content, i.e. outside the
+       element that actually scrolls. If .invite scrolled AND held the
+       transform below, .snowfield (fixed, but contained by that same
+       transformed+scrolling box) would be dragged along with the
+       scroll like a plain absolutely-positioned child - "fixed to the
+       frame" only works when the transform sits on a non-scrolling
+       ancestor of the scrolling element, with the fixed layer as that
+       ancestor's other child, not nested inside the scroller. */
+    /* A transform makes .invite the containing block for its
+       position: fixed descendants (.snowfield) - without it, "fixed"
+       would mean fixed to the real browser viewport, so the falling
+       snow would spill outside this rounded mock-phone frame and cover
+       the surrounding desktop backdrop instead of staying inside it.
+       Only needed here: on an actual phone, .invite already IS the
+       viewport for all practical purposes, and body/html (not .invite)
+       are what scrolls, so .snowfield must stay fixed to the real
+       viewport there to keep tracking the screen as the page scrolls. */
+    transform: translateZ(0);
   }
 }
 
 /* ---------- snow ---------- */
+/* Fixed (not absolute) so the falling snow tracks the screen itself
+   rather than a fixed point on the page - it stays visible no matter
+   which section is scrolled into view, instead of only near the intro.
+   pointer-events: none means it never blocks taps on whatever's under
+   it (gallery nav buttons included); z-index just needs to clear the
+   page's normal content (.content is 1) - it's still well below an
+   actual overlay like .toast (60) for anything added later. */
 .snowfield {
-  position: absolute;
+  position: fixed;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
@@ -373,19 +393,40 @@ button {
   justify-content: center;
 }
 .cal-cell span {
+  position: relative;
+  z-index: 0;
   width: 27px;
   height: 27px;
-  border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 15px;
-  background: transparent;
+  font-size: 18px;
   color: var(--ink);
 }
 .cal-cell.sun span { color: var(--ink-soft); }
-.cal-cell.marked span { background: var(--ink); color: #0A0A0A; }
+/* The marked (today) circle is a ::before behind the digit rather than
+   a background on the span itself: the span's own box is centered by
+   flex, so pinning the circle to that same box's center via
+   absolute + translate(-50%, -50%) keeps the two centers identical
+   regardless of digit width (narrow "1" vs wider "12") - a background
+   fill on the span would instead follow the span's own (slightly
+   glyph-width-dependent) box and drift off-center. */
+.cal-cell.marked span {
+  color: #0A0A0A;
+}
+.cal-cell.marked span::before {
+  content: '';
+  position: absolute;
+  top: 57%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ink);
+  z-index: -1;
+}
 .cal-cell.empty span { color: transparent; }
 
 .countdown {
@@ -532,6 +573,7 @@ button {
   aspect-ratio: 3 / 4;
   background: var(--card-bg-soft);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 .gallery-expand-img {
   position: absolute;
@@ -544,28 +586,58 @@ button {
 }
 .gallery-expand-img.is-switching { opacity: 0; }
 
+/* Faint edge gradients so the glass nav buttons read as sitting on top
+   of the photo rather than just floating over it - purely decorative,
+   so they sit above the photo but never intercept taps/swipes. */
+.gallery-expand-frame::before,
+.gallery-expand-frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 90px;
+  max-width: 32%;
+  pointer-events: none;
+  z-index: 1;
+}
+.gallery-expand-frame::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0));
+}
+.gallery-expand-frame::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0));
+}
+
 .gallery-expand-nav {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, .3);
+  transform: translateY(-50%) scale(1);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, .22);
   border-radius: 50%;
-  background: rgba(10, 10, 10, .7);
+  background: rgba(0, 0, 0, .35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
   color: #F2F2F0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   appearance: none;
-  z-index: 1;
-  transition: background .15s ease;
+  z-index: 2;
+  transition: background .2s ease, transform .2s ease;
 }
-.gallery-expand-nav:hover { background: rgba(30, 30, 30, .8); }
+.gallery-expand-nav:hover,
+.gallery-expand-nav:active {
+  background: rgba(30, 30, 30, .5);
+  transform: translateY(-50%) scale(1.08);
+}
 .gallery-expand-nav svg { display: block; }
-.gallery-expand-prev { left: -16px; }
-.gallery-expand-next { right: -16px; }
+.gallery-expand-prev { left: 4px; }
+.gallery-expand-next { right: 4px; }
 
 .block-location { padding: 150px 24px 0; }
 .map-embed {
@@ -793,6 +865,33 @@ button {
   color: var(--ink-soft);
 }
 
+/* ---------- scroll reveal ---------- */
+/* Applied to each main section below the intro (see script.js's
+   initScrollReveal - the intro itself is excluded since it must be
+   visible immediately, not waited-for). will-change is added/removed
+   by JS right around the transition rather than living here
+   permanently, so these sections aren't sitting in their own GPU layer
+   for the entire time they're off-screen. */
+.reveal {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity .7s ease-out, transform .7s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Safety net independent of the JS logic: if the user has asked the
+   OS/browser to cut down on motion, every .reveal section must already
+   read as fully visible with no animation, not just "animate faster." */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ---------- toast ---------- */
 /* Also kept dark on purpose: a brief high-contrast chip reads clearly
    over any part of the page it happens to float above. */
@@ -825,6 +924,13 @@ button {
 @media (hover: hover) and (pointer: fine) and (min-width: 431px) {
   .content {
     height: 100%;
+    /* .content (not .invite) is the actual scroll container in the
+       framed desktop layout - see the note on .invite's transform
+       above for why that split is required for the fixed .snowfield
+       layer to stay put while this scrolls. */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .intro-section {

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>이창용 &amp; 백지원 결혼합니다</title>
+<meta name="description" content="2026년 12월 12일 토요일 오후 3시 20분, KDW웨딩 3층 블랙스톤홀">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@200;300;400;500&family=Pinyon+Script&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!-- 카카오맵(다음 로드뷰) 퍼가기 로더. 페이지에 지도가 하나뿐이므로 한 번만 로드합니다. -->
+<script charset="UTF-8" class="daum_roughmap_loader_script" src="https://t1.kakaocdn.net/kakaomapweb/roughmap/loader/prod/roughmapLoader.js"></script>
+</head>
+<body>
+
+<main class="invite">
+  <div class="snowfield" id="snowfield" aria-hidden="true"></div>
+
+  <div class="content">
+
+    <div class="intro-section reveal">
+      <section class="block block-hero">
+        <div class="eyebrow">THE WEDDING OF</div>
+      </section>
+
+      <section class="block block-photo">
+        <img src="assets/lace-photo-5.webp" alt="레이스 프레임 커플 사진" class="lace-photo">
+      </section>
+
+      <section class="block block-names">
+        <div class="names">Lee chang yong<br><span class="amp">&amp;</span><br>Baek ji won</div>
+        <div class="invite-line">TOGETHER WITH OUR FAMILIES,<br>WE INVITE YOU TO JOIN US.</div>
+      </section>
+
+      <div class="snow-pile" id="snowPile" aria-hidden="true"></div>
+    </div>
+
+    <section class="block block-greeting reveal">
+      <div class="greeting">겨울의 어느 날,<br>
+        서로에게 따뜻한 사람이 되기로 약속합니다.<br>
+        차가운 계절에도 서로의 온기가 되어<br>
+        함께 걸어가고 싶은<br>
+        두 사람이 부부의 첫걸음을 내딛습니다.<br>
+        소중한 분들을 모시고 저희의 시작을 함께하고 싶습니다.<br>
+        귀한 걸음으로 축복해주세요.</div>
+      <div class="hosts">
+        <div class="host-col">
+          <div class="host-parents">이채민 &middot; 정순애의 아들</div>
+          <div class="host-name">이창용</div>
+        </div>
+        <div class="host-col">
+          <div class="host-parents">백승진 &middot; 전태자의 딸</div>
+          <div class="host-name">백지원</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block block-datetime reveal">
+      <div class="date-mono">DECEMBER 12, 2026 &middot; SATURDAY</div>
+      <div class="time">03:20 <span class="pm">PM</span></div>
+      <div class="venue">KDW웨딩 3층 블랙스톤홀<br>서울특별시 강동구 천호대로 1102</div>
+    </section>
+
+    <section class="block block-calendar reveal">
+      <div class="cal-card">
+        <div class="cal-title">DECEMBER</div>
+        <div class="cal-weekdays">
+          <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="countdown">
+          <div class="countdown-rule"></div>
+          <div class="countdown-labels">
+            <span>Day</span>
+            <span>Hour</span>
+            <span>Min</span>
+            <span>Sec</span>
+          </div>
+          <div class="countdown-values">
+            <span id="cd-days">00</span><span id="cd-hrs">00</span><span id="cd-min">00</span><span id="cd-sec">00</span>
+          </div>
+        </div>
+        <div class="countdown-message">이창용 <span class="countdown-heart" aria-hidden="true">&#9829;</span> 백지원의 결혼식이 <span class="countdown-dday" id="countdownDday">0</span>일 남았습니다.</div>
+      </div>
+    </section>
+
+    <section class="block block-gallery reveal">
+      <div class="section-title">GALLERY</div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+      <div class="gallery-expand" id="galleryExpand">
+        <div class="gallery-expand-frame">
+          <button type="button" class="gallery-expand-nav gallery-expand-prev" id="galleryExpandPrev" aria-label="이전 사진">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+          </button>
+          <img src="" alt="" class="gallery-expand-img" id="galleryExpandImg">
+          <button type="button" class="gallery-expand-nav gallery-expand-next" id="galleryExpandNext" aria-label="다음 사진">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block block-location reveal">
+      <div class="section-title">LOCATION</div>
+      <div class="map-embed" id="mapEmbed">
+        <div class="map-embed-inner" id="mapEmbedInner">
+          <div id="daumRoughmapContainer1789568298875" class="root_daum_roughmap root_daum_roughmap_landing"></div>
+        </div>
+      </div>
+      <script charset="UTF-8">
+        new daum.roughmap.Lander({
+          "timestamp" : "1789568298875",
+          "key" : "2jzdnp9vczcn",
+          "mapWidth" : "640",
+          "mapHeight" : "360"
+        }).render();
+      </script>
+      <div class="map-buttons">
+        <a class="map-btn pill-btn" href="https://naver.me/x4leUzY3" target="_blank" rel="noopener noreferrer">네이버</a>
+        <a class="map-btn pill-btn" href="https://kko.to/B_CvBH1pik" target="_blank" rel="noopener noreferrer">카카오</a>
+        <a class="map-btn pill-btn" href="https://tmap.life/e200e1d9" target="_blank" rel="noopener noreferrer">티맵</a>
+      </div>
+      <div class="transit-accordion" id="transitAccordion"></div>
+    </section>
+
+    <section class="block block-accounts reveal">
+      <div class="section-title">마음 전하실 곳</div>
+      <div class="accounts-note">보내주시는 따뜻한 마음에<br>진심으로 감사드리며<br>행복한 모습으로 보답하겠습니다.</div>
+      <div class="accounts" id="accounts"></div>
+    </section>
+
+    <section class="block block-contact reveal">
+      <div class="section-title">CONTACT</div>
+      <div class="contact-list" id="contactList"></div>
+    </section>
+
+    <section class="block block-closing reveal">
+      <div class="closing">With grateful hearts</div>
+    </section>
+
+  </div>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
