@@ -220,14 +220,29 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 32px;
+  gap: 0;
 }
 
-.eyebrow {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 12px;
-  letter-spacing: .32em;
-  color: var(--ink-soft);
+/* The three intro lines are artwork (assets/main1-3.webp), not live
+   type. Each is sized by max-width alone - width: 100% / height: auto
+   keeps the source aspect ratio, so they scale down together on narrow
+   phones instead of one line wrapping differently from the others. The
+   max-widths are picked so each one's *visible lettering* lands at
+   roughly the width the text it replaces occupied; the files carry a
+   little transparent margin of their own, which is why the vertical
+   spacing below is tighter than the old font-size/line-height-derived
+   values. */
+.intro-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* Replaces the old .eyebrow (12px Cormorant, .32em tracking). */
+.eyebrow-img {
+  max-width: min(240px, 29vh);
+  max-width: min(240px, 29dvh);
 }
 
 .block-hero { padding: 0 30px; }
@@ -235,27 +250,29 @@ button {
 .block-photo { padding: 0 24px; }
 .lace-photo {
   display: block;
-  width: 52%;
+  width: 80%;
   height: auto;
   margin: 0 auto;
 }
 
-.block-names { padding: 0 30px; }
-.names {
-  font-family: 'Pinyon Script', cursive;
-  font-size: 30px;
-  line-height: 1.05;
-  letter-spacing: .01em;
-  color: var(--ink);
+.block-names {
+  padding: 0 30px;
 }
-.names .amp { font-size: 22px; color: var(--ink-soft); }
-.invite-line {
-  margin-top: 34px;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 13px;
-  letter-spacing: .18em;
-  line-height: 2.1;
-  color: var(--ink-soft);
+
+/* Replaces the old .names (30px Pinyon Script over three lines). */
+.names-img {
+  max-width: min(260px, 40vh);
+  max-width: min(260px, 40dvh);
+}
+/* Replaces the old .invite-line. Its 34px margin-top was keyed to the
+   13px/2.1 type above it; the artwork already carries ~9px of its own
+   transparent padding top and bottom, so the gap is pulled in to 16px
+   to keep the same optical spacing. */
+.invite-line-img {
+  margin-top: clamp(8px, 2vh, 16px);
+  margin-top: clamp(8px, 2dvh, 16px);
+  max-width: min(280px, 51vh);
+  max-width: min(280px, 51dvh);
 }
 
 .block-greeting { padding: 0px 24px 0; }
@@ -772,6 +789,11 @@ button {
   backdrop-filter: blur(var(--card-blur));
   -webkit-backdrop-filter: blur(var(--card-blur));
 }
+/* Serif throughout (matches the "신랑측"/"신부측" accounts accordion
+   header, .account-header: inherits the page's base 'Noto Serif KR')
+   rather than the sans-serif used elsewhere in the info-dense sections
+   - label, name and the CALL/SMS pills all read as one family now, set
+   once here and inherited down instead of repeated per element. */
 .contact-row {
   display: flex;
   align-items: center;
@@ -779,15 +801,14 @@ button {
   min-height: 44px;
   padding: 12px 16px;
   border-top: 1px solid var(--hairline-soft);
-  font-family: var(--sans);
+  font-family: 'Noto Serif KR', serif;
   color: var(--ink);
 }
 .contact-row:first-child { border-top: 0; }
-/* Sans-serif for this information-dense area, with weight/color doing
-   the hierarchy: the relation label is small and muted, the name is
-   larger, semibold, and full-strength ink. The label column has a
-   fixed width (sized to the longest label, "신랑 아버지"/"신부 어머니")
-   so every name lines up in the same spot down the list, like a table. */
+/* Weight/size/color still carry the hierarchy: label small and muted,
+   name larger and full-strength ink. The label column has a fixed
+   width (sized to the longest label, "신랑 아버지"/"신부 어머니") so every
+   name lines up in the same spot down the list, like a table. */
 .contact-label {
   flex: 0 0 70px;
   font-size: 11px;
@@ -797,7 +818,7 @@ button {
 .contact-name {
   flex: none;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
 }
 .contact-actions {
@@ -810,7 +831,6 @@ button {
   padding: 7px 14px;
   font-size: 10px;
   font-weight: 500;
-  font-family: var(--sans);
 }
 
 .block-closing { padding: 100px 0 100px; }
