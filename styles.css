@@ -778,7 +778,6 @@ html.is-lightbox-open { overflow: hidden; }
   gap: 8px;
 }
 .account-row .bank {
-  font-family: 'Spline Sans Mono', monospace;
   font-size: 11px;
   color: var(--ink);
 }
