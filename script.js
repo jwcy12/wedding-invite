@@ -92,8 +92,14 @@
     document.getElementById('countdownDday').textContent = String(dd);
   }
 
-  // webp only - it's the only format actually shipped in assets/ now.
-  const GALLERY_EXTS = ['webp'];
+  // Two display-sized copies of each original (assets/gallery-NN.webp,
+  // ~3000px, kept only as the source): -sm (480px short side) for the
+  // grid and -lg (1600px long side) for the popup. Decoding nine
+  // full-size originals at once costs hundreds of MB of image memory -
+  // enough to get the page killed on older iPhones, especially inside
+  // in-app browsers like KakaoTalk's.
+  const galleryThumb = (label) => `assets/gallery-${label}-sm.webp`;
+  const galleryFull = (label) => `assets/gallery-${label}-lg.webp`;
 
   function renderGallery() {
     const grid = document.getElementById('galleryGrid');
@@ -102,6 +108,7 @@
       tile.type = 'button';
       tile.className = 'gallery-tile';
       tile.setAttribute('aria-label', `갤러리 사진 ${label} 크게 보기`);
+      tile.dataset.full = galleryFull(label);
 
       const placeholder = document.createElement('span');
       placeholder.className = 'gallery-tile-label';
@@ -111,21 +118,13 @@
       const img = document.createElement('img');
       img.alt = `갤러리 사진 ${label}`;
       // Not lazy: the lightbox's prev/next only cycles through tiles
-      // whose image has loaded, so loading all 9 eagerly keeps the full
-      // set reachable from the first tap.
-      let extIndex = 0;
-      img.addEventListener('error', () => {
-        extIndex += 1;
-        if (extIndex < GALLERY_EXTS.length) {
-          img.src = `assets/gallery-${label}.${GALLERY_EXTS[extIndex]}`;
-        } else {
-          img.remove();
-        }
-      });
+      // whose image has loaded, so loading all 9 (small) thumbnails
+      // eagerly keeps the full set reachable from the first tap.
+      img.addEventListener('error', () => img.remove());
       img.addEventListener('load', () => {
         tile.classList.add('has-image');
       });
-      img.src = `assets/gallery-${label}.${GALLERY_EXTS[extIndex]}`;
+      img.src = galleryThumb(label);
       tile.appendChild(img);
 
       tile.addEventListener('click', () => {
@@ -240,8 +239,20 @@
   function setLightboxImage(tile) {
     const lightboxImg = document.getElementById('lightboxImg');
     const gridImg = tile.querySelector('img');
-    lightboxImg.src = gridImg.src;
+    lightboxImg.src = tile.dataset.full;
     lightboxImg.alt = gridImg.alt;
+    preloadLightboxNeighbors();
+  }
+
+  // Warm the cache for the photos one step either side, so prev/next
+  // swaps in an already-downloaded image instead of a blank frame.
+  function preloadLightboxNeighbors() {
+    const n = lightboxTiles.length;
+    if (n < 2) return;
+    [1, -1].forEach((step) => {
+      const tile = lightboxTiles[((lightboxIndex + step) % n + n) % n];
+      new Image().src = tile.dataset.full;
+    });
   }
 
   function openLightbox(tile) {
@@ -388,21 +399,32 @@
     toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
   }
 
+  // For browsers/webviews without navigator.clipboard. iOS needs the
+  // explicit setSelectionRange (select() alone selects nothing there),
+  // readOnly keeps the keyboard from popping up, and a 16px font keeps
+  // iOS from zooming in on focus. execCommand reports failure by
+  // returning false rather than throwing, so both are checked.
   function fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
+    ta.readOnly = true;
     ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '0';
     ta.style.opacity = '0';
+    ta.style.fontSize = '16px';
     document.body.appendChild(ta);
     ta.focus();
     ta.select();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
     try {
-      document.execCommand('copy');
-      showToast('복사되었습니다');
+      ok = document.execCommand('copy');
     } catch (err) {
-      showToast('복사에 실패했습니다');
+      ok = false;
     }
     document.body.removeChild(ta);
+    showToast(ok ? '복사되었습니다' : '복사에 실패했습니다');
   }
 
   function copyToClipboard(text) {
@@ -592,7 +614,12 @@
           obs.unobserve(entry.target);
         });
       },
-      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+      // threshold 0 (any overlap with the area above the bottom 8%)
+      // rather than a percentage of the section: the closing line is a
+      // short last section, and its reveal offset (translateY 60px)
+      // kept most of it below that line even at max scroll, so a
+      // percentage threshold could never be met and it stayed hidden.
+      { threshold: 0, rootMargin: '0px 0px -8% 0px' }
     );
     targets.forEach((el) => observer.observe(el));
   }
@@ -624,38 +651,29 @@
     Promise.race([Promise.all([fontsReady, pageReady]), timeout]).then(() => revealOnce(intro));
   }
 
-  // ---------- pinch/double-tap zoom guard ----------
-  // The viewport meta's maximum-scale=1/user-scalable=no blocks pinch
-  // zoom, but iOS Safari has long ignored that for double-tap zoom
-  // specifically. The standard workaround: if a touchend fires within
-  // 300ms of the previous one, treat it as a double-tap and cancel its
-  // default action before Safari can turn it into a zoom. This doesn't
-  // stopPropagation, so it never interferes with other touch handlers
-  // (e.g. the lightbox swipe listeners) - it only cancels the
-  // browser's own zoom/synthetic-click behavior for that touch.
-  function initDoubleTapZoomGuard() {
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', (e) => {
-      const now = Date.now();
-      if (now - lastTouchEnd <= 300) {
-        e.preventDefault();
-      }
-      lastTouchEnd = now;
-    }, { passive: false });
-  }
-
-  renderCalendar();
-  renderCountdown();
-  renderGallery();
-  renderAccounts();
-  renderContacts();
-  renderTransitAccordion();
-  renderSnow();
-  initLightbox();
-  initLocationSketch();
-  initKakaoMap();
-  initSnowTabPause();
-  initScrollReveal();
-  initIntroReveal();
-  initDoubleTapZoomGuard();
+  // Each step runs in isolation: if one throws (an API missing in some
+  // older/in-app browser, say), the rest still run - most importantly
+  // the reveal setup, without which every section would stay at the
+  // hidden starting state of .reveal.
+  [
+    renderCalendar,
+    renderCountdown,
+    renderGallery,
+    renderAccounts,
+    renderContacts,
+    renderTransitAccordion,
+    renderSnow,
+    initLightbox,
+    initLocationSketch,
+    initKakaoMap,
+    initSnowTabPause,
+    initScrollReveal,
+    initIntroReveal
+  ].forEach((step) => {
+    try {
+      step();
+    } catch (err) {
+      console.error(err);
+    }
+  });
 })();
