@@ -30,7 +30,7 @@
 
   /* Dusty rose point color - the one spot of color against the
      otherwise monochrome ivory-on-black palette (countdown D-day
-     number, heart accent). */
+     number). */
   --accent: #C96B6B;
   /* Flat black base tone for the page background. */
   --paper-bg: #0A0A0A;
@@ -45,6 +45,15 @@
 
 html, body {
   height: 100%;
+}
+
+/* Scroll snap for the first three screens (intro, greeting, calendar).
+   On a phone the page itself (the viewport) is the scroller, so the
+   snap container is html; the framed desktop layout moves this onto
+   .content, which scrolls there instead (see the media query at the
+   bottom). */
+html {
+  scroll-snap-type: y mandatory;
 }
 
 body {
@@ -65,7 +74,13 @@ button {
   margin: 0 auto;
   background-color: var(--paper-bg);
   color: var(--ink-soft);
+  /* clip, not hidden: overflow: hidden would make .invite a scroll
+     container, and the snap screens inside would attach to it instead
+     of to the page's own scroller (html) - silently disabling the
+     scroll snap on phones. clip crops the same way without that. Older
+     browsers without clip fall back to hidden (no snap, still usable). */
   overflow: hidden;
+  overflow: clip;
   min-height: 100vh;
 }
 
@@ -220,29 +235,42 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0;
+  gap: 16px;
+  scroll-snap-align: start;
 }
 
-/* The three intro lines are artwork (assets/main1-3.webp), not live
-   type. Each is sized by max-width alone - width: 100% / height: auto
-   keeps the source aspect ratio, so they scale down together on narrow
-   phones instead of one line wrapping differently from the others. The
-   max-widths are picked so each one's *visible lettering* lands at
-   roughly the width the text it replaces occupied; the files carry a
-   little transparent margin of their own, which is why the vertical
-   spacing below is tighter than the old font-size/line-height-derived
-   values. */
-.intro-art {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0 auto;
+/* Screens 2 and 3 (greeting + date/venue, calendar): at least one full
+   screen tall with their content centered, and a snap point at the top.
+   min-height rather than height, so if the content ever outgrows the
+   screen (very short viewport, enlarged system font) the screen grows
+   instead of clipping - it then just scrolls like the free zone below.
+   The wrapper carries no .reveal on purpose: .reveal's translateY
+   would otherwise move the snap area itself mid-animation. */
+.snap-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  scroll-snap-align: start;
 }
 
-/* Replaces the old .eyebrow (12px Cormorant, .32em tracking). */
-.eyebrow-img {
-  max-width: min(240px, 29vh);
-  max-width: min(240px, 29dvh);
+/* Everything after the calendar (gallery, location, accounts, contact,
+   closing) is one snap area that is taller than the screen. Under
+   mandatory snapping, a snap area larger than the scrollport can be
+   scrolled through freely - so inside this zone scrolling is free, and
+   the snap only engages at its top edge (calendar <-> gallery). Without
+   this, mandatory snapping would drag any stop in the lower sections
+   back up to the calendar. */
+.free-flow {
+  scroll-snap-align: start;
+}
+
+.eyebrow {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  letter-spacing: .32em;
+  color: var(--ink-soft);
 }
 
 .block-hero { padding: 0 30px; }
@@ -255,24 +283,22 @@ button {
   margin: 0 auto;
 }
 
-.block-names {
-  padding: 0 30px;
+.block-names { padding: 0 30px; }
+.names {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: .01em;
+  color: var(--ink);
 }
-
-/* Replaces the old .names (30px Pinyon Script over three lines). */
-.names-img {
-  max-width: min(260px, 40vh);
-  max-width: min(260px, 40dvh);
-}
-/* Replaces the old .invite-line. Its 34px margin-top was keyed to the
-   13px/2.1 type above it; the artwork already carries ~9px of its own
-   transparent padding top and bottom, so the gap is pulled in to 16px
-   to keep the same optical spacing. */
-.invite-line-img {
-  margin-top: clamp(8px, 2vh, 16px);
-  margin-top: clamp(8px, 2dvh, 16px);
-  max-width: min(280px, 51vh);
-  max-width: min(280px, 51dvh);
+.names .amp { font-size: 22px; color: var(--ink-soft); }
+.invite-line {
+  margin-top: 24px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: .18em;
+  line-height: 2.1;
+  color: var(--ink-soft);
 }
 
 .block-greeting { padding: 0px 24px 0; }
@@ -284,7 +310,7 @@ button {
   color: var(--ink-soft);
 }
 .hosts {
-  margin-top: 64px;
+  margin-top: 88px;
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
@@ -305,7 +331,7 @@ button {
   color: var(--ink);
 }
 
-.block-datetime { padding: 48px 30px 0; }
+.block-datetime { padding: 0 30px; }
 .date-mono {
   font-family: 'Spline Sans Mono', monospace;
   font-size: 11px;
@@ -328,8 +354,14 @@ button {
   color: var(--ink-soft);
 }
 
-.block-calendar { padding: 40px 24px 0; }
+/* Screen 3 = date/venue on top, calendar card right under it. */
+.block-calendar { padding: 32px 24px 0; }
+
+/* The whole calendar card (title, weekdays, dates, countdown, D-day
+   line) uses the same family as the contact rows (.contact-row);
+   children inherit it rather than each naming a family. */
 .cal-card {
+  font-family: 'Noto Serif KR', serif;
   padding: 30px 20px;
   border-radius: var(--radius-lg);
   background: var(--card-bg);
@@ -339,16 +371,14 @@ button {
 }
 .cal-title {
   text-align: center;
-  font-family: 'Cormorant Garamond', serif;
   font-size: 14px;
-  letter-spacing: .28em;
+  letter-spacing: .12em;
   color: var(--ink-soft);
 }
 .cal-weekdays {
   margin-top: 40px;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  font-family: 'Spline Sans Mono', monospace;
   font-size: 10px;
   color: var(--ink-soft);
   text-align: center;
@@ -373,8 +403,7 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
+  font-size: 14px;
   color: var(--ink);
 }
 .cal-cell.sun span { color: var(--ink-soft); }
@@ -391,7 +420,7 @@ button {
 .cal-cell.marked span::before {
   content: '';
   position: absolute;
-  top: 57%;
+  top: 53%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 34px;
@@ -413,7 +442,6 @@ button {
   margin-top: 18px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  font-family: 'Spline Sans Mono', monospace;
   font-size: 10px;
   letter-spacing: .16em;
   text-align: center;
@@ -431,8 +459,7 @@ button {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   text-align: center;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 34px;
+  font-size: 24px;
   letter-spacing: .02em;
   color: var(--ink);
 }
@@ -444,9 +471,10 @@ button {
   content: ':';
   position: absolute;
   left: 0;
-  top: 0;
-  transform: translateX(-50%);
-  font-size: 22px;
+  top: 50%;
+  transform: translate(-50%, -55%);
+  font-size: 20px;
+  line-height: 1;
   color: var(--ink-soft);
 }
 
@@ -456,15 +484,47 @@ button {
   font-size: 13px;
   font-weight: 300;
   line-height: 1.8;
+  word-break: keep-all;
   color: var(--ink-soft);
 }
-.countdown-heart {
+.countdown-sep {
   margin: 0 1px;
-  color: var(--accent);
 }
 .countdown-dday {
   font-weight: 500;
   color: var(--accent);
+}
+
+/* Screen 3 is the tallest of the snap screens (~670px at full size), so
+   on shorter viewports its vertical spacing - and at the lowest tier
+   its type - steps down (placed after the base calendar rules so it
+   wins the cascade) to keep it inside one screen. 760px covers the
+   common 667-740px phones with a light spacing trim; 620px covers
+   Safari on an iPhone SE, whose toolbars leave ~548px. */
+@media (max-height: 760px) {
+  /* Spacing only - date (16px) and countdown (30px) type stay as is. */
+  .block-calendar { padding-top: 24px; }
+  .cal-card { padding: 24px 20px; }
+  .cal-weekdays { margin-top: 26px; }
+  .cal-cell { height: 36px; }
+  .countdown { margin-top: 24px; }
+}
+@media (max-height: 620px) {
+  .countdown-labels { margin-top: 14px; }
+  .countdown-values { margin-top: 6px; }
+  .countdown-message { margin-top: 12px; }
+  .time { margin-top: 8px; font-size: 24px; }
+  .time .pm { font-size: 19px; }
+  .venue { margin-top: 8px; line-height: 1.7; }
+  .block-calendar { padding-top: 16px; }
+  .cal-card { padding: 18px 18px; }
+  .cal-weekdays { margin-top: 16px; }
+  .cal-grid { margin-top: 6px; }
+  .cal-cell { height: 31px; }
+  .cal-cell span { font-size: 15px; }
+  .cal-cell.marked span::before { width: 30px; height: 30px; }
+  .countdown { margin-top: 16px; }
+  .countdown-values { font-size: 24px; }
 }
 
 .section-title {
@@ -528,42 +588,53 @@ button {
   display: none;
 }
 
-.gallery-tile.is-active {
-  box-shadow: inset 0 0 0 2px var(--ink);
+/* ---------- gallery lightbox (popup over the page) ---------- */
+/* Closed (hidden) on load; a tile tap opens it over a dimmed backdrop.
+   position: fixed resolves against .invite in the framed desktop layout
+   (it carries a transform there - see the note on .invite), so the
+   popup covers just the phone frame rather than the whole browser. It
+   sits above the snow (3) but below .toast (60). */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .82);
+  /* The photo is sized in cqw/cqh against this box, so it fits the
+     overlay (= the phone frame on desktop) whatever the photo's own
+     aspect ratio - gallery-09 is landscape, the rest portrait. */
+  container-type: size;
+  overscroll-behavior: contain;
+  animation: lightbox-in .2s ease;
+}
+.lightbox[hidden] { display: none; }
+@keyframes lightbox-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* ---------- gallery expand (in-page, below the grid) ---------- */
-/* Replaces the old fullscreen lightbox: the tapped photo enlarges into
-   this panel right under the grid instead of covering the screen. It's
-   permanently pinned there (photo 01 by default, before any tap) with
-   its prev/next arrows always visible - there's no open/closed state. */
-.gallery-expand {
-  margin-top: 14px;
-}
-.gallery-expand-frame {
+.lightbox-frame {
   position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  background: var(--card-bg-soft);
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .5);
 }
-.gallery-expand-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.lightbox-img {
   display: block;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  max-width: 100cqw;
+  max-height: 100cqh;
   transition: opacity .18s ease;
 }
-.gallery-expand-img.is-switching { opacity: 0; }
+.lightbox-img.is-switching { opacity: 0; }
 
 /* Faint edge gradients so the glass nav buttons read as sitting on top
    of the photo rather than just floating over it - purely decorative,
    so they sit above the photo but never intercept taps/swipes. */
-.gallery-expand-frame::before,
-.gallery-expand-frame::after {
+.lightbox-frame::before,
+.lightbox-frame::after {
   content: '';
   position: absolute;
   top: 0;
@@ -573,21 +644,25 @@ button {
   pointer-events: none;
   z-index: 1;
 }
-.gallery-expand-frame::before {
+.lightbox-frame::before {
   left: 0;
   background: linear-gradient(to right, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0));
 }
-.gallery-expand-frame::after {
+.lightbox-frame::after {
   right: 0;
   background: linear-gradient(to left, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0));
 }
 
-.gallery-expand-nav {
+/* One glass-button style shared by close (×) and prev/next (‹ ›) so the
+   three read as a set. Each button's resting position offset lives in
+   --btn-shift, so the hover scale composes with it instead of each
+   variant restating its own transform. */
+.lightbox-btn {
+  --btn-shift: translate(0, 0);
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%) scale(1);
   width: 36px;
   height: 36px;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, .22);
   border-radius: 50%;
   background: rgba(0, 0, 0, .35);
@@ -601,16 +676,32 @@ button {
   cursor: pointer;
   appearance: none;
   z-index: 2;
+  transform: var(--btn-shift) scale(1);
   transition: background .2s ease, transform .2s ease;
 }
-.gallery-expand-nav:hover,
-.gallery-expand-nav:active {
+.lightbox-btn:hover,
+.lightbox-btn:active {
   background: rgba(30, 30, 30, .5);
-  transform: translateY(-50%) scale(1.08);
+  transform: var(--btn-shift) scale(1.08);
 }
-.gallery-expand-nav svg { display: block; }
-.gallery-expand-prev { left: 4px; }
-.gallery-expand-next { right: 4px; }
+.lightbox-btn[hidden] { display: none; }
+.lightbox-btn svg { display: block; }
+.lightbox-close { top: -8px; right: -8px; }
+.lightbox-nav { top: 50%; --btn-shift: translateY(-50%); }
+.lightbox-prev { left: 4px; }
+.lightbox-next { right: 4px; }
+
+/* Background page stays put while the popup is open. Only html, not
+   body: html/body are both height: 100%, so hiding body's overflow too
+   would turn body into its own scroll box and snap the page to the top. */
+html.is-lightbox-open { overflow: hidden; }
+
+/* Same glass as the buttons' border, for keyboard focus. */
+.lightbox-btn:focus { outline: none; }
+.lightbox-btn:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, .6);
+  outline-offset: 2px;
+}
 
 .block-location { padding: 150px 24px 0; }
 .map-embed {
@@ -909,7 +1000,18 @@ button {
     -webkit-overflow-scrolling: touch;
   }
 
+  .content {
+    scroll-snap-type: y mandatory;
+  }
+
   .intro-section {
     height: 100%;
   }
+  .snap-screen {
+    min-height: 100%;
+  }
+
+  /* .content is the scroller in the framed layout, so that's what
+     has to freeze while the gallery popup is open. */
+  html.is-lightbox-open .content { overflow-y: hidden; }
 }

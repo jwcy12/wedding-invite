@@ -110,10 +110,9 @@
 
       const img = document.createElement('img');
       img.alt = `갤러리 사진 ${label}`;
-      // Not lazy: photo 01 needs to be ready to auto-open into the
-      // expand panel right away on page load (see the load listener
-      // below), and the rest are tiny optimized files anyway - loading
-      // all 9 eagerly costs little and keeps prev/next usable early.
+      // Not lazy: the lightbox's prev/next only cycles through tiles
+      // whose image has loaded, so loading all 9 eagerly keeps the full
+      // set reachable from the first tap.
       let extIndex = 0;
       img.addEventListener('error', () => {
         extIndex += 1;
@@ -125,18 +124,12 @@
       });
       img.addEventListener('load', () => {
         tile.classList.add('has-image');
-        // Default state: the first photo is shown expanded from the
-        // moment its image is ready, with no click required.
-        if (label === galleryLabels[0] && !hasAutoOpenedGallery) {
-          hasAutoOpenedGallery = true;
-          showGalleryTile(tile, { scroll: false });
-        }
       });
       img.src = `assets/gallery-${label}.${GALLERY_EXTS[extIndex]}`;
       tile.appendChild(img);
 
       tile.addEventListener('click', () => {
-        if (tile.classList.contains('has-image')) showGalleryTile(tile);
+        if (tile.classList.contains('has-image')) openLightbox(tile);
       });
 
       grid.appendChild(tile);
@@ -233,94 +226,111 @@
     });
   }
 
-  // ---------- gallery expand (in-page, below the grid) ----------
-  // A panel permanently pinned right under the gallery grid (not a
-  // fullscreen overlay, and never closed) - it shows photo 01 by
-  // default and swaps to whichever tile is tapped. Prev/next (always
-  // visible) cycle through all 9 photos, wrapping in either direction.
-  // The currently-shown tile is tracked by identity, and the loaded-tile
-  // list is re-queried fresh on every prev/next rather than cached, so
-  // navigation still lands on the right photo even if it's used before
-  // every one of the 9 images has finished loading in.
-  let currentGalleryTile = null;
-  let hasAutoOpenedGallery = false;
+  // ---------- gallery lightbox (popup) ----------
+  // Closed on page load; tapping a grid tile opens that photo in a
+  // popup over a dimmed backdrop. Prev/next (buttons, arrow keys or a
+  // horizontal swipe) cycle through all loaded photos, wrapping in
+  // either direction. Close via the × button, a tap on the backdrop, or
+  // Escape. The loaded-tile list is snapshotted on open, so the order
+  // stays stable while the popup is showing.
+  let lightboxTiles = [];
+  let lightboxIndex = -1;
+  let lightboxOpener = null;
 
-  function showGalleryTile(tile, { scroll = true } = {}) {
-    const expand = document.getElementById('galleryExpand');
-    const expandImg = document.getElementById('galleryExpandImg');
+  function setLightboxImage(tile) {
+    const lightboxImg = document.getElementById('lightboxImg');
     const gridImg = tile.querySelector('img');
-    if (!expand || !expandImg || !gridImg) return;
-
-    currentGalleryTile = tile;
-    expandImg.src = gridImg.src;
-    expandImg.alt = gridImg.alt;
-    updateGalleryActiveTile();
-
-    // The default auto-open on page load must not yank the page down to
-    // the gallery section - only a user-initiated tile click scrolls.
-    if (scroll) {
-      expand.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    lightboxImg.src = gridImg.src;
+    lightboxImg.alt = gridImg.alt;
   }
 
-  function updateGalleryActiveTile() {
-    document.querySelectorAll('.gallery-tile.is-active').forEach((t) => t.classList.remove('is-active'));
-    if (currentGalleryTile) currentGalleryTile.classList.add('is-active');
-  }
-
-  function showGalleryPhoto(step) {
+  function openLightbox(tile) {
     const tiles = Array.from(document.querySelectorAll('.gallery-tile.has-image'));
-    if (tiles.length === 0) return;
-    const curIdx = tiles.indexOf(currentGalleryTile);
-    const baseIdx = curIdx === -1 ? 0 : curIdx;
-    const nextIdx = ((baseIdx + step) % tiles.length + tiles.length) % tiles.length; // circular wrap
-    const tile = tiles[nextIdx];
-    const gridImg = tile.querySelector('img');
-    const expandImg = document.getElementById('galleryExpandImg');
+    const idx = tiles.indexOf(tile);
+    if (idx === -1) return;
+    lightboxTiles = tiles;
+    lightboxIndex = idx;
+    lightboxOpener = tile;
 
-    currentGalleryTile = tile;
-    updateGalleryActiveTile();
-    expandImg.classList.add('is-switching');
+    const lightbox = document.getElementById('lightbox');
+    setLightboxImage(tile);
+    const multiple = tiles.length > 1;
+    document.getElementById('lightboxPrev').hidden = !multiple;
+    document.getElementById('lightboxNext').hidden = !multiple;
+    lightbox.hidden = false;
+    document.documentElement.classList.add('is-lightbox-open');
+    document.getElementById('lightboxClose').focus({ preventScroll: true });
+  }
+
+  function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox.hidden) return;
+    lightbox.hidden = true;
+    document.documentElement.classList.remove('is-lightbox-open');
+    document.getElementById('lightboxImg').src = '';
+    lightboxTiles = [];
+    lightboxIndex = -1;
+    // Hand focus back to the tile that opened it, without scrolling.
+    if (lightboxOpener) lightboxOpener.focus({ preventScroll: true });
+    lightboxOpener = null;
+  }
+
+  // Quick opacity crossfade while the image source swaps.
+  function showLightboxPhoto(step) {
+    const n = lightboxTiles.length;
+    if (n < 2) return;
+    lightboxIndex = ((lightboxIndex + step) % n + n) % n; // circular wrap
+    const tile = lightboxTiles[lightboxIndex];
+    const lightboxImg = document.getElementById('lightboxImg');
+
+    lightboxImg.classList.add('is-switching');
     setTimeout(() => {
-      expandImg.src = gridImg.src;
-      expandImg.alt = gridImg.alt;
-      requestAnimationFrame(() => expandImg.classList.remove('is-switching'));
+      setLightboxImage(tile);
+      requestAnimationFrame(() => lightboxImg.classList.remove('is-switching'));
     }, 160);
   }
 
-  function initGalleryExpand() {
-    const expand = document.getElementById('galleryExpand');
-    const prevBtn = document.getElementById('galleryExpandPrev');
-    const nextBtn = document.getElementById('galleryExpandNext');
-    if (!expand || !prevBtn || !nextBtn) return;
+  function initLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    const closeBtn = document.getElementById('lightboxClose');
+    const prevBtn = document.getElementById('lightboxPrev');
+    const nextBtn = document.getElementById('lightboxNext');
+    if (!lightbox || !closeBtn || !prevBtn || !nextBtn) return;
 
-    prevBtn.addEventListener('click', () => showGalleryPhoto(-1));
-    nextBtn.addEventListener('click', () => showGalleryPhoto(1));
+    closeBtn.addEventListener('click', closeLightbox);
+    prevBtn.addEventListener('click', () => showLightboxPhoto(-1));
+    nextBtn.addEventListener('click', () => showLightboxPhoto(1));
+
+    // A tap on the dimmed backdrop (not the photo or its buttons) closes.
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') showGalleryPhoto(1);
-      else if (e.key === 'ArrowLeft') showGalleryPhoto(-1);
+      if (lightbox.hidden) return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') showLightboxPhoto(1);
+      else if (e.key === 'ArrowLeft') showLightboxPhoto(-1);
     });
 
     // Touch swipe, for the mobile frame.
     let touchStartX = null;
     let touchStartY = null;
-    expand.addEventListener('touchstart', (e) => {
+    lightbox.addEventListener('touchstart', (e) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     }, { passive: true });
-    expand.addEventListener('touchend', (e) => {
+    lightbox.addEventListener('touchend', (e) => {
       if (touchStartX === null) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = e.changedTouches[0].clientY - touchStartY;
       touchStartX = null;
       touchStartY = null;
       const SWIPE_THRESHOLD = 40;
-      // Ignore mostly-vertical drags so a scroll attempt doesn't get
-      // mistaken for a swipe.
+      // Ignore mostly-vertical drags so they aren't mistaken for a swipe.
       if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
-      if (dx < 0) showGalleryPhoto(1);
-      else showGalleryPhoto(-1);
+      if (dx < 0) showLightboxPhoto(1);
+      else showLightboxPhoto(-1);
     });
   }
 
@@ -621,7 +631,7 @@
   // 300ms of the previous one, treat it as a double-tap and cancel its
   // default action before Safari can turn it into a zoom. This doesn't
   // stopPropagation, so it never interferes with other touch handlers
-  // (e.g. the gallery-expand swipe listeners) - it only cancels the
+  // (e.g. the lightbox swipe listeners) - it only cancels the
   // browser's own zoom/synthetic-click behavior for that touch.
   function initDoubleTapZoomGuard() {
     let lastTouchEnd = 0;
@@ -641,7 +651,7 @@
   renderContacts();
   renderTransitAccordion();
   renderSnow();
-  initGalleryExpand();
+  initLightbox();
   initLocationSketch();
   initKakaoMap();
   initSnowTabPause();
