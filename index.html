@@ -7,7 +7,7 @@
 <meta name="description" content="2026년 12월 12일 토요일 오후 3시 20분, KDW웨딩 3층 블랙스톤홀">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@200;300;400;500&family=Pinyon+Script&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+KR:wght@200;300;400;500&family=Pinyon+Script&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <!-- JavaScript가 꺼져 있거나 로드되지 않아도 스크롤 등장 애니메이션 때문에 내용이 숨겨진 채로 남지 않게 합니다. -->
 <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
@@ -54,34 +54,36 @@
       </div>
     </section>
 
-    <section class="block block-datetime reveal">
-      <div class="date-mono">12.12.2026 &middot; SATURDAY</div>
-      <div class="time">03:20 <span class="pm">PM</span></div>
-      <div class="venue">KDW웨딩 3층 블랙스톤홀<br>서울특별시 강동구 천호대로 1102</div>
-    </section>
+    <div class="calendar-section reveal">
+      <section class="block block-datetime">
+        <div class="date-mono">12.12.2026 &middot; SATURDAY</div>
+        <div class="time">03:20 <span class="pm">PM</span></div>
+        <div class="venue">KDW웨딩 3층 블랙스톤홀<br>서울특별시 강동구 천호대로 1102</div>
+      </section>
 
-    <section class="block block-calendar reveal">
-      <div class="cal-card">
-        <div class="cal-title">2026년 12월</div>
-        <div class="cal-weekdays">
-          <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
-        </div>
-        <div class="cal-grid" id="calGrid"></div>
-        <div class="countdown">
-          <div class="countdown-rule"></div>
-          <div class="countdown-labels">
-            <span>Day</span>
-            <span>Hour</span>
-            <span>Min</span>
-            <span>Sec</span>
+      <section class="block block-calendar">
+        <div class="cal-card">
+          <div class="cal-title">2026년 12월</div>
+          <div class="cal-weekdays">
+            <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
           </div>
-          <div class="countdown-values">
-            <span id="cd-days">00</span><span id="cd-hrs">00</span><span id="cd-min">00</span><span id="cd-sec">00</span>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="countdown">
+            <div class="countdown-rule"></div>
+            <div class="countdown-labels">
+              <span>Day</span>
+              <span>Hour</span>
+              <span>Min</span>
+              <span>Sec</span>
+            </div>
+            <div class="countdown-values">
+              <span id="cd-days">00</span><span id="cd-hrs">00</span><span id="cd-min">00</span><span id="cd-sec">00</span>
+            </div>
           </div>
+          <div class="countdown-message">이창용 <span class="countdown-sep" aria-hidden="true">&middot;</span> 백지원의 결혼식이 <span class="countdown-dday" id="countdownDday">0</span>일 남았습니다.</div>
         </div>
-        <div class="countdown-message">이창용 <span class="countdown-sep" aria-hidden="true">&middot;</span> 백지원의 결혼식이 <span class="countdown-dday" id="countdownDday">0</span>일 남았습니다.</div>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <section class="block block-gallery reveal">
       <div class="section-title">GALLERY</div>

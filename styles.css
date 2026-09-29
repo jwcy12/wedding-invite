@@ -26,8 +26,6 @@
   --fill-btn-hover: rgba(244, 242, 237, .14);
   --hover-bg: rgba(244, 242, 237, .06);
 
-  --sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
   /* Dusty rose point color - the one spot of color against the
      otherwise monochrome ivory-on-black palette (countdown D-day
      number). */
@@ -40,10 +38,12 @@
      snow. One shared, moderate radius instead of several 16px instances. */
   --card-blur: 10px;
 
-  /* Space between consecutive sections below the intro. Every
-     section-to-section boundary uses this one value, applied as the
+  /* Space between the natural-height sections from LOCATION onward
+     (they stack in normal flow, unlike the four "one screen" sections
+     above them - see .block-location/.block-accounts/.block-contact).
+     Every boundary among those uses this one value, applied as the
      next section's padding-top. */
-  --section-gap: 160px;
+  --section-gap: 120px;
 }
 
 * { box-sizing: border-box; }
@@ -224,17 +224,15 @@ button {
 
 .block { text-align: center; }
 
-/* First screen: hero eyebrow + photo + names, always exactly one
-   viewport tall so it never gets cut off or overflows regardless of
-   device height. 100dvh accounts for mobile browser chrome (address
-   bar) resizing the viewport; 100vh is the fallback for browsers that
-   don't support dvh yet. */
+/* First screen: hero eyebrow + photo + names, sized to exactly one
+   viewport (min-height, not height, so if the content ever runs taller
+   than the screen - a long system font scale, a very short desktop
+   window - it grows instead of clipping rather than forcing a scrollbar
+   inside the section). No scroll-snap: this and the other five
+   "one-screen" sections below are plain free-scrolling blocks, they
+   just each happen to be at least one viewport tall. */
 .intro-section {
   position: relative;
-  /* min-height, not height: identical when the content fits (it does
-     at every tested size), but if it doesn't - Android/KakaoTalk
-     system font scaling, a very short desktop window - the screen
-     grows instead of cutting off the names above and below. */
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -278,7 +276,18 @@ button {
   color: var(--ink-soft);
 }
 
-.block-greeting { padding: 0 24px 0; }
+/* One-screen section, same reasoning as .intro-section above: min-height
+   (not height) so a taller message than expected just grows the section
+   and overflows past one screen rather than clipping; centered by flex
+   instead of a fixed top padding so it sits mid-screen at any height. */
+.block-greeting {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 24px;
+}
 .greeting {
   font-size: 13px;
   font-weight: 300;
@@ -308,7 +317,23 @@ button {
   color: var(--ink);
 }
 
-.block-datetime { padding: var(--section-gap) 30px 0; }
+/* Date/venue + the calendar card below are wrapped in one
+   .calendar-section (see index.html) and treated as a single
+   one-screen "달력" section, the same way .intro-section wraps its own
+   three children - .block-datetime/.block-calendar keep their own
+   horizontal padding but no longer carry the top padding that used to
+   space them from the section before/after; the wrapper's min-height +
+   centering does that now, and its gap (below) replaces
+   .block-calendar's old 32px top padding as the space between the two. */
+.calendar-section {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+}
+.block-datetime { padding: 0 30px; }
 .date-mono {
   font-family: 'Spline Sans Mono', monospace;
   font-size: 11px;
@@ -331,8 +356,7 @@ button {
   color: var(--ink-soft);
 }
 
-/* Date/venue sits right on top of the calendar card, as one group. */
-.block-calendar { padding: 32px 24px 0; }
+.block-calendar { padding: 0 24px; }
 
 /* The whole calendar card (title, weekdays, dates, countdown, D-day
    line) uses the same family as the contact rows (.contact-row);
@@ -480,7 +504,18 @@ button {
   color: var(--ink-soft);
 }
 
-.block-gallery { padding: var(--section-gap) 24px 0; }
+/* One-screen section (see .intro-section above for the pattern/why). A
+   full 3-column photo grid usually runs taller than one viewport, which
+   is fine - min-height only sets a floor, so it overflows past one
+   screen naturally instead of being squeezed to fit. */
+.block-gallery {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 24px;
+}
 .gallery-grid {
   margin-top: 20px;
   display: grid;
@@ -825,7 +860,7 @@ html.is-lightbox-open { overflow: hidden; }
   font-weight: 500;
 }
 
-.block-contact { padding: 80px 24px 0; }
+.block-contact { padding: var(--section-gap) 24px 0; }
 .contact-list {
   margin-top: 20px;
   border-radius: var(--radius-lg);
@@ -938,10 +973,6 @@ html.is-lightbox-open { overflow: hidden; }
   transform: translate(-50%, 0);
 }
 
-/* Inside the boxed PC frame, "one screen" is the frame's own height,
-   not the raw browser viewport (which is taller than the frame by
-   design). Swap the dvh/vh sizing for a percentage of the frame.
-   Placed after the base .intro-section rule so it wins the cascade. */
 @media (hover: hover) and (pointer: fine) and (min-width: 431px) {
   .content {
     height: 100%;
@@ -954,7 +985,16 @@ html.is-lightbox-open { overflow: hidden; }
     -webkit-overflow-scrolling: touch;
   }
 
-  .intro-section {
+  /* Inside the boxed PC frame, "one screen" is the frame's own height,
+     not the raw browser viewport (which is taller than the frame by
+     design, since vh/dvh always measure the real window regardless of
+     this transformed/clipped ancestor). Swap each one-screen section's
+     dvh/vh floor for 100% of the frame instead. Placed after their base
+     rules above so this wins the cascade. */
+  .intro-section,
+  .block-greeting,
+  .calendar-section,
+  .block-gallery {
     min-height: 100%;
   }
 
