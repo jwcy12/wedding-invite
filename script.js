@@ -435,15 +435,6 @@
       const pageUrl = bust(SHARE_PAGE_URL);
       const mapUrl = bust(SHARE_MAP_URL);
 
-      // TEMP DEBUG - remove once confirmed on a real phone (see chat for
-      // context). Shows the exact "위치 보기" URL this specific device's
-      // currently-running script.js is about to hand to Kakao, right
-      // before the share sheet opens - if this already shows the wrong
-      // value, the bug is this device's cached script.js, not the
-      // deployed code (which has been verified correct from a clean
-      // network load).
-      alert('위치 보기 URL: ' + mapUrl);
-
       Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
