@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>위치 안내</title>
+<!-- 카카오톡 공유 카드의 "위치 보기" 버튼이 거쳐가는 중계 페이지.
+     그 버튼의 link.webUrl이 외부 도메인(place.map.kakao.com)을 직접
+     가리키면 카카오 쪽이 등록 안 된 도메인으로 보고 링크를 등록 사이트
+     루트로 대체해버리는 것으로 보여 - 그래서 버튼은 항상 이 페이지(우리
+     자신의 등록된 도메인, jwcy12.github.io/wedding-invite/ 안의 경로)를
+     가리키게 하고, 실제 카카오맵 이동은 여기서 한 번 더 일어나게 함.
+     meta refresh(자바스크립트 꺼져 있거나 일부 인앱 브라우저의 제약 있는
+     상황도 커버)와 location.replace()(더 즉각적, 뒤로가기 히스토리에도
+     이 중계 페이지가 안 남게) 둘 다 걸어서 어느 한쪽이 막혀도 넘어가게
+     이중으로 처리. -->
+<meta http-equiv="refresh" content="0; url=https://place.map.kakao.com/10124741">
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #0A0A0A;
+    color: rgba(244, 242, 237, .72);
+    font-family: 'Noto Serif KR', serif;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+  }
+  a { color: #F4F2ED; }
+</style>
+</head>
+<body>
+  <p>지도로 이동 중입니다.<br>자동으로 이동하지 않으면<br><a href="https://place.map.kakao.com/10124741">여기를 눌러주세요</a>.</p>
+  <script>
+    location.replace('https://place.map.kakao.com/10124741');
+  </script>
+</body>
+</html>
