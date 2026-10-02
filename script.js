@@ -12,7 +12,16 @@
   const SHARE_DESCRIPTION = '2026년 12월 12일 토요일 오후 3시 20분\nKDW웨딩 3층 블랙스톤홀';
   const SHARE_IMAGE_URL = 'https://jwcy12.github.io/wedding-invite/assets/og-image.jpg';
   const SHARE_PAGE_URL = 'https://jwcy12.github.io/wedding-invite/';
-  const SHARE_MAP_URL = 'https://kko.to/B_CvBH1pik'; // 카카오맵 - LOCATION 섹션의 "카카오" 버튼과 동일한 링크
+  // 카카오맵 장소 페이지(place.map.kakao.com, place id 10124741 = KDW웨딩).
+  // LOCATION 섹션의 "카카오" 버튼(kko.to/B_CvBH1pik)과는 의도적으로 다른
+  // URL을 쓴다 - 그 kko.to 단축링크는 실제로는 applink.map.kakao.com(카카오맵
+  // '앱'을 여는 딥링크 리졸버)으로 리다이렉트되는 주소라, 일반 <a> 태그로
+  // 브라우저에서 열 땐 문제없지만 버그 리포트상 Kakao.Share.sendDefault의
+  // buttons[].link로 쓰면 카카오 쪽 공유 카드에서 디벨로퍼스에 등록된 앱의
+  // 루트 도메인(https://jwcy12.github.io/, 404)으로 떨어졌다 - 카카오가 그
+  // 딥링크를 유효한 webUrl로 인식 못 해 등록 도메인으로 대체한 것으로 보임.
+  // place.map.kakao.com은 평범한 https 웹페이지라 이 문제를 피해간다.
+  const SHARE_MAP_URL = 'https://place.map.kakao.com/10124741';
 
   const galleryLabels = ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
 

@@ -309,9 +309,15 @@ button {
   line-height: 1.6;
   color: var(--ink-soft);
 }
+/* Korean text ("이창용"/"백지원") - no font-family override needed, this
+   inherits the page's base 'Noto Serif KR' from <body>. The previous
+   'Cormorant Garamond, serif' here was a bug: Cormorant Garamond has no
+   Hangul glyphs, so every character fell through to the browser's
+   generic 'serif' keyword instead - a different system font per
+   platform (most visibly a mismatch against the rest of the page's
+   Noto Serif KR on iOS Safari), not the font actually intended. */
 .host-name {
   margin-top: 8px;
-  font-family: 'Cormorant Garamond', serif;
   font-size: 17px;
   letter-spacing: .1em;
   color: var(--ink);
@@ -496,9 +502,18 @@ button {
   color: var(--accent);
 }
 
+/* Shared by both the all-English titles (GALLERY/LOCATION/CONTACT) and
+   the one Korean title ("마음 전하실 곳"). 'Noto Serif KR' is listed
+   explicitly before the generic 'serif' fallback: Cormorant Garamond
+   has no Hangul glyphs, so without it "마음 전하실 곳" fell through to
+   whatever CJK serif the browser/OS ships as its generic default
+   (inconsistent across platforms, most visibly a mismatch on iOS
+   Safari) instead of this page's actual body font. The English titles
+   are unaffected either way - Cormorant Garamond covers every
+   character in them, so the fallback never engages for those. */
 .section-title {
   text-align: center;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
   font-size: 14px;
   letter-spacing: .28em;
   color: var(--ink-soft);
