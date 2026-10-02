@@ -422,17 +422,30 @@
     }
 
     btn.addEventListener('click', () => {
+      // A fresh ?v=<timestamp> on every destination URL, regenerated on
+      // each tap - a cache-buster against Kakao's own share-link
+      // handling possibly keying off the exact URL string (so an
+      // earlier, pre-fix share of this same URL can't keep surfacing a
+      // stale cached card/button to a NEW recipient). This is separate
+      // from, and doesn't fix, a tapping device's own browser cache of
+      // script.js itself - that's governed by this file's URL
+      // (unparameterized, in index.html's <script src="script.js">),
+      // not by anything inside this payload.
+      const bust = (url) => url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+      const pageUrl = bust(SHARE_PAGE_URL);
+      const mapUrl = bust(SHARE_MAP_URL);
+
       Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
           title: SHARE_TITLE,
           description: SHARE_DESCRIPTION,
           imageUrl: SHARE_IMAGE_URL,
-          link: { mobileWebUrl: SHARE_PAGE_URL, webUrl: SHARE_PAGE_URL },
+          link: { mobileWebUrl: pageUrl, webUrl: pageUrl },
         },
         buttons: [
-          { title: '청첩장 보기', link: { mobileWebUrl: SHARE_PAGE_URL, webUrl: SHARE_PAGE_URL } },
-          { title: '위치 보기', link: { mobileWebUrl: SHARE_MAP_URL, webUrl: SHARE_MAP_URL } },
+          { title: '청첩장 보기', link: { mobileWebUrl: pageUrl, webUrl: pageUrl } },
+          { title: '위치 보기', link: { mobileWebUrl: mapUrl, webUrl: mapUrl } },
         ],
       });
     });
