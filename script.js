@@ -1,6 +1,19 @@
 (() => {
   const WEDDING_DATE = new Date('2026-12-12T15:20:00+09:00').getTime();
 
+  // Kakao "카카오톡 공유하기" feed card content. Kept in one place so the
+  // title/description/image/URL used in the actual share card can't
+  // drift from each other - but note this is a SEPARATE source from the
+  // <meta property="og:..."> tags in index.html's <head> (the fallback
+  // preview for a plain pasted link). There's no build step on this
+  // static page to generate one from the other, so a wording change
+  // here needs the same change made by hand in index.html's <head>.
+  const SHARE_TITLE = '이창용 ♥ 백지원 결혼합니다.';
+  const SHARE_DESCRIPTION = '2026년 12월 12일 토요일 오후 3시 20분\nKDW웨딩 3층 블랙스톤홀';
+  const SHARE_IMAGE_URL = 'https://jwcy12.github.io/wedding-invite/assets/og-image.jpg';
+  const SHARE_PAGE_URL = 'https://jwcy12.github.io/wedding-invite/';
+  const SHARE_MAP_URL = 'https://kko.to/B_CvBH1pik'; // 카카오맵 - LOCATION 섹션의 "카카오" 버튼과 동일한 링크
+
   const galleryLabels = ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
 
   const accountsData = {
@@ -382,6 +395,40 @@
     }
   }
 
+  // ---------- kakao talk share ----------
+  function initKakaoShare() {
+    const btn = document.getElementById('kakaoShareBtn');
+    if (!btn) return;
+
+    // The SDK <script> tag in <head> is a blocking, synchronous load that
+    // calls Kakao.init() right after - by the time this (script.js, at
+    // the end of body) runs, window.Kakao is already loaded and
+    // initialized, unless the request itself never completed (ad
+    // blocker, offline, Kakao's CDN down). Either way there's nothing
+    // the button can do then, so it explains that on tap instead of
+    // silently doing nothing.
+    if (!window.Kakao || !Kakao.isInitialized()) {
+      btn.addEventListener('click', () => showToast('카카오톡 공유를 사용할 수 없습니다'));
+      return;
+    }
+
+    btn.addEventListener('click', () => {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: SHARE_TITLE,
+          description: SHARE_DESCRIPTION,
+          imageUrl: SHARE_IMAGE_URL,
+          link: { mobileWebUrl: SHARE_PAGE_URL, webUrl: SHARE_PAGE_URL },
+        },
+        buttons: [
+          { title: '청첩장 보기', link: { mobileWebUrl: SHARE_PAGE_URL, webUrl: SHARE_PAGE_URL } },
+          { title: '위치 보기', link: { mobileWebUrl: SHARE_MAP_URL, webUrl: SHARE_MAP_URL } },
+        ],
+      });
+    });
+  }
+
   // ---------- clipboard copy + toast ----------
   let toastTimer = null;
 
@@ -435,6 +482,15 @@
     } else {
       fallbackCopy(text);
     }
+  }
+
+  // "링크주소 복사하기" next to the Kakao share button - same copy path
+  // and toast as the account-number copy buttons above, just with the
+  // page URL as the text instead of a bank account number.
+  function initShareLinkCopy() {
+    const btn = document.getElementById('copyLinkBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => copyToClipboard(SHARE_PAGE_URL));
   }
 
   function seededRandom(i, seed, k) {
@@ -666,6 +722,8 @@
     initLightbox,
     initLocationSketch,
     initKakaoMap,
+    initKakaoShare,
+    initShareLinkCopy,
     initSnowTabPause,
     initScrollReveal,
     initIntroReveal
