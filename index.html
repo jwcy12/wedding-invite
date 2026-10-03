@@ -87,14 +87,14 @@
 
     <div class="calendar-section reveal">
       <section class="block block-datetime">
-        <div class="date-mono">12.12.2026 &middot; SATURDAY</div>
+        <div class="date-mono">2026.12.12 &middot; <span class="sat">토요일</span></div>
         <div class="time">03:20 <span class="pm">PM</span></div>
         <div class="venue">KDW웨딩 3층 블랙스톤홀<br>서울특별시 강동구 천호대로 1102</div>
       </section>
 
       <section class="block block-calendar">
         <div class="cal-card">
-          <div class="cal-title">2026년 12월</div>
+          <div class="cal-title">12월</div>
           <div class="cal-weekdays">
             <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
           </div>
@@ -199,6 +199,19 @@
       </button>
     </div>
   </div>
+
+  <!-- 배경음악. .content의 형제로 .invite 바로 아래 둬서(.snowfield/.lightbox와
+       같은 이유) 토글 버튼이 데스크톱 박스 프레임에서는 프레임에, 실제 폰에서는
+       화면 자체에 고정되게 함. -->
+  <audio id="bgm" src="assets/Antenna-inst.mp3" loop preload="auto"></audio>
+  <button type="button" class="bgm-toggle" id="bgmToggle" aria-label="배경음악 일시정지" aria-pressed="true">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"/>
+      <circle cx="6" cy="18" r="3"/>
+      <circle cx="18" cy="16" r="3"/>
+      <line class="bgm-mute-slash" x1="2" y1="2" x2="22" y2="22"/>
+    </svg>
+  </button>
 
 </main>
 

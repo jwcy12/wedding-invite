@@ -303,7 +303,7 @@ button {
 .host-col { padding: 0 14px; }
 .host-col + .host-col { border-left: 1px solid var(--hairline); }
 .host-parents {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 300;
   letter-spacing: .04em;
   line-height: 1.6;
@@ -340,22 +340,30 @@ button {
   gap: 32px;
 }
 .block-datetime { padding: 0 30px; }
+/* .time과 동일한 폰트로 통일 (font-family만 - 크기/자간/색상은 그대로).
+   텍스트에 "토요일" 같은 한글이 섞여 있어서, 'Cormorant Garamond'만 바로
+   쓰면 한글 글리프가 없어 그 부분만 시스템 기본 세리프로 깨지는(이전에
+   .host-name/.section-title에서 고쳤던 것과 동일한) 문제가 생긴다.
+   'Noto Serif KR'을 명시적 폴백으로 넣어서, 숫자/구두점은 .time과 똑같이
+   Cormorant Garamond로 렌더링되고 한글만 안전하게 Noto Serif KR로
+   떨어지게 함. */
 .date-mono {
-  font-family: 'Spline Sans Mono', monospace;
-  font-size: 11px;
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  font-size: 22px;
   letter-spacing: .2em;
-  color: var(--ink-soft);
+  color: var(--ink);
 }
+.date-mono .sat {font-size: 13px;}
 .time {
-  margin-top: 12px;
+  margin-top: 4px;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
+  font-size: 26px;
   letter-spacing: .14em;
   color: var(--ink);
 }
-.time .pm { font-size: 22px; }
+.time .pm { font-size: 18px; }
 .venue {
-  margin-top: 18px;
+  margin-top: 24px;
   font-size: 13px;
   font-weight: 300;
   line-height: 1.9;
@@ -707,6 +715,53 @@ html.is-lightbox-open { overflow: hidden; }
   outline: 1px solid rgba(255, 255, 255, .6);
   outline-offset: 2px;
 }
+
+/* ---------- background music toggle ---------- */
+/* Same translucent-glass recipe as .lightbox-btn (dark fill + blur +
+   a faint white border, #F2F2F0 icon) rather than the page's flatter
+   --fill-btn/--ink-soft tokens used by in-flow buttons - this one is
+   position: fixed and stays on screen over every section (snow, photos,
+   cards), so it needs the same contrast insurance the lightbox nav
+   buttons already rely on to stay legible over varying backgrounds. */
+.bgm-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 4;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  color: #F2F2F0;
+  cursor: pointer;
+  appearance: none;
+  transition: background .15s ease, transform .15s ease;
+}
+.bgm-toggle:hover,
+.bgm-toggle:active {
+  background: rgba(30, 30, 30, .5);
+  transform: scale(1.08);
+}
+.bgm-toggle:focus { outline: none; }
+.bgm-toggle:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, .6);
+  outline-offset: 2px;
+}
+.bgm-toggle svg { display: block; }
+/* The slash is drawn right on the note icon (not swapped for a second
+   icon) so play/pause reads as one icon's state changing, not two
+   different icons - .bgm-mute-slash is hidden while playing and only
+   appears once .bgm-toggle carries .is-paused (toggled in script.js). */
+.bgm-mute-slash { display: none; }
+.bgm-toggle.is-paused .bgm-mute-slash { display: block; }
 
 .block-location { padding: var(--section-gap) 24px 0; }
 .map-embed {

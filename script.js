@@ -571,6 +571,49 @@
     });
   }
 
+  // ---------- background music ----------
+  // Most mobile browsers (and plenty of desktop ones) block audio from
+  // starting before the page has seen any user gesture, so the autoplay
+  // attempt below usually rejects - that's expected, not an error state,
+  // and the toggle button's icon reflects whichever way it actually
+  // landed. The fallback below starts playback on the very first click
+  // anywhere on the page (not just the button), so a visitor doesn't
+  // need to find and tap the toggle specifically for music to begin.
+  function initBgm() {
+    const audio = document.getElementById('bgm');
+    const btn = document.getElementById('bgmToggle');
+    if (!audio || !btn) return;
+
+    audio.volume = 0.5;
+
+    function setPlayingUI(playing) {
+      btn.classList.toggle('is-paused', !playing);
+      btn.setAttribute('aria-pressed', String(playing));
+      btn.setAttribute('aria-label', playing ? '배경음악 일시정지' : '배경음악 재생');
+    }
+
+    audio.play().then(() => setPlayingUI(true)).catch(() => setPlayingUI(false));
+
+    // One-shot: the button has its own click handler below, so this
+    // only needs to cover taps elsewhere on the page. Once audio is
+    // playing (started here or via the button) there's nothing left
+    // for this listener to do, hence { once: true }.
+    document.addEventListener('click', (e) => {
+      if (btn.contains(e.target)) return;
+      if (!audio.paused) return;
+      audio.play().then(() => setPlayingUI(true)).catch(() => {});
+    }, { once: true });
+
+    btn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play().then(() => setPlayingUI(true)).catch(() => setPlayingUI(false));
+      } else {
+        audio.pause();
+        setPlayingUI(false);
+      }
+    });
+  }
+
   function renderSnow() {
     const field = document.getElementById('snowfield');
     // Trimmed from 30, then again from 22: now that .snowfield is
@@ -747,6 +790,7 @@
     initKakaoShare,
     initShareLinkCopy,
     initSnowTabPause,
+    initBgm,
     initScrollReveal,
     initIntroReveal
   ].forEach((step) => {
