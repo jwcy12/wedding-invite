@@ -348,20 +348,17 @@ button {
    Cormorant Garamond로 렌더링되고 한글만 안전하게 Noto Serif KR로
    떨어지게 함. */
 .date-mono {
-  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
-  font-size: 22px;
+  font-size: 16px;
   letter-spacing: .2em;
   color: var(--ink);
 }
 .date-mono .sat {font-size: 13px;}
 .time {
   margin-top: 4px;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
+  font-size: 16px;
   letter-spacing: .14em;
   color: var(--ink);
 }
-.time .pm { font-size: 18px; }
 .venue {
   margin-top: 24px;
   font-size: 13px;
