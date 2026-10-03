@@ -300,7 +300,7 @@ button {
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
-.host-col { padding: 0 10px; }
+.host-col { padding: 0 4px; }
 .host-col + .host-col { border-left: 1px solid var(--hairline); }
 .host-parents {
   font-size: 14px;
